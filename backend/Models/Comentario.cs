@@ -11,7 +11,7 @@ public class Comentario
     public String comentario{get; set;} ="";
 
     [Range(1, 5, ErrorMessage = "La calificacion debe estar entre 1 y 5")]
-    public int califiacion {get; set;}
+    public int calificacion {get; set;}
 
     [Required]
     public DateTime fechaCreacion {get; set;}
