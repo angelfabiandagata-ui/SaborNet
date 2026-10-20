@@ -11,4 +11,6 @@ public class Ingrediente
 
     [Required(ErrorMessage = "El ingrediente debe tener unidad de medida")]
     public String unidadDeMedida {get; set;} ="";
+
+    public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; }
 }

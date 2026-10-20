@@ -14,4 +14,21 @@ public class AppDbContext : DbContext
     public DbSet<Ingrediente> Ingredientes {get; set;}
 
     public DbSet<Comentario> comentarios {get; set;}
+
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RecetaIngrediente>()
+            .HasKey(ri => new { ri.RecetaId, ri.IngredienteId });
+
+        modelBuilder.Entity<RecetaIngrediente>()
+            .HasOne(ri => ri.Receta)
+            .WithMany(r => r.RecetaIngredientes)
+            .HasForeignKey(ri => ri.RecetaId);
+
+        modelBuilder.Entity<RecetaIngrediente>()
+            .HasOne(ri => ri.Ingrediente)
+            .WithMany(i => i.RecetaIngredientes)
+            .HasForeignKey(ri => ri.IngredienteId);
+    }
 }

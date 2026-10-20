@@ -9,5 +9,4 @@ public class Categoria
     [Required(ErrorMessage = "La categoria debe tener nombre")]
     public String Nombre {get; set;} ="";
 
-    public ICollection<Receta> Recetas {get; set;} = new List<Receta>();
 }

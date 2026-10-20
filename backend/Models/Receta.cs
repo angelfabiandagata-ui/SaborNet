@@ -31,4 +31,6 @@ public class Receta
 
     public Usuario Usuario { get; set; } = null!;
     public Categoria Categoria { get; set; } = null!;
+
+    public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; }
 }
