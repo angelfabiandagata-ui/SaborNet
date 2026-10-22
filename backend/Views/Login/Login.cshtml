@@ -1,0 +1,25 @@
+@model backend.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+
+<h3>Iniciar sesión</h3>
+
+<form method="post" asp-action="Login">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div>
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" placeholder="usuario@gmail.com">
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div>
+        <label asp-for="Password">Contraseña</label>
+        <input asp-for="Password" placeholder="******">
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+
+    <button type="submit">Iniciar sesión</button>
+
+</form>
