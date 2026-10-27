@@ -3,7 +3,7 @@
 
 using System.Security.Claims;
 using backend.Models;
-using backend.ViewModels;
+using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SaborNet.Service;
