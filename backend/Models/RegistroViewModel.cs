@@ -20,5 +20,5 @@ public class RegistroViewModel
     [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden")]
     public string ConfirmarPassword { get; set; } = "";
 
-    public string AvatarUrl { get; set; } = "";
+    public string? AvatarUrl { get; set; } = "";
 }

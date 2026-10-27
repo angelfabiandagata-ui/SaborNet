@@ -23,7 +23,7 @@ public class Usuario
     public string Password { get; set; }="";
 
     [DataType(DataType.ImageUrl)]
-    public string AvatarUrl  {get; set;}="";
+    public string? AvatarUrl  {get; set;}="";
     [Required]
     public Rol rol {get; set;}
 }

@@ -19,59 +19,70 @@
                 <a class="navbar-brand fw-medium text-white fs-4" asp-area="" asp-controller="Home"
                    asp-action="Index">Sabor<b>Net</b></a>
         
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target=".navbar-collapse"                 aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav mx-auto mb-2 mb-sm-0">
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home"
-                               asp-action="Index">Recetas Populares</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home"
-                               asp-action="Privacy">Recetas Nuevas</a>
-                        </li>
-                    </ul>
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Recetas
+                                Populares</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Home"
+                                   asp-action="Privacy">Recetas Nuevas</a>
+                            </li>
+                        </ul>
 
-                    <div class="d-flex align-items-center">
-                        <form class="d-flex mx-3 my-2 my-sm-0" role="search">
-                            <div class="input-group">
-                                <input type="text" class="form-control"
-                                       placeholder="Busca una receta" aria-label="Buscar receta">
-                                <button class="btn btn-light" type="button" id="button-addon">
-                                    <i class="fa-solid fa-magnifying-glass"></i> Buscar
-                                </button>
-                            </div>
-                        </form>
+                        <div class="d-flex align-items-center">
+                            <form class="d-flex mx-3 my-2 my-sm-0" role="search">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Busca una receta"
+                                           aria-label="Buscar receta">
+                                    <button class="btn btn-light" type="button" id="button-addon">
+                                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                                    </button>
+                                </div>
+                            </form>
 
-                        <a class="btn btn-outline-light text-nowrap" asp-area="" asp-controller="Login"
-                           asp-action="Login">
-                            <i class="fa-solid fa-user me-1"></i> Iniciar Sesión
-                        </a>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="Login" asp-action="Perfil" method="post">
+                                    <button type="submit " class="btn btn-outline-light">Perfil</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a class="btn btn-outline-light text-nowrap" asp-area="" asp-controller="Login"
+                                   asp-action="Login">
+                                    <i class="fa-solid fa-user me-1"></i> Iniciar Sesión
+                                </a>
+                            }
+
+                       
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
+            </nav>
+        </header>
         <div class="container">
-            &copy; 2026 - SaborNet - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
+
+        <footer class="border-top footer text-muted">
+            <div class="container">
+                &copy; 2026 - SaborNet - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </footer>
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
 
 </html>

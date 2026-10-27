@@ -55,6 +55,8 @@ public class LoginController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    
+
     public IActionResult Registrarse()
     {
         return View(new RegistroViewModel());
@@ -77,7 +79,7 @@ public class LoginController : Controller
         {
             Nombre = model.Nombre,
             Email = model.Email,
-            AvatarUrl = model.AvatarUrl,
+            AvatarUrl = model.AvatarUrl ?? "",
             rol = Usuario.Rol.Usuario
         };
         usuario.Password = _passwordHasher.HashPassword(usuario, model.Password);
