@@ -23,6 +23,7 @@ public class RecetasController : Controller
         _entorno = entorno;
     }
 
+    /*
     // GET: /Recetas
     [HttpGet]
     public async Task<IActionResult> Index(int pagina = 1)
@@ -443,6 +444,6 @@ public class RecetasController : Controller
 
         if (System.IO.File.Exists(ruta))
             System.IO.File.Delete(ruta);
-    }
+    */
 }
 
