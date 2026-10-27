@@ -1,87 +1,158 @@
+// CATEGORIAS
+
+
 using Microsoft.AspNetCore.Mvc;
 using backend.Models;
-using backend.data;
+using SaborNet.Service;
 
 namespace backend.Controllers;
 
 public class CategoriasController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly CategoriaService _categoriaService;
 
-    public CategoriasController(AppDbContext context)
+    public CategoriasController(
+        CategoriaService categoriaService)
     {
-        _context = context;
+        _categoriaService = categoriaService;
     }
 
+    // GET: /Categorias
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var categorias = _context.Categorias.ToList();
-        return Ok(categorias);
+        var categorias =
+            await _categoriaService.ListarOrdenadas();
+
+        return View(categorias);
     }
 
+    // GET: /Categorias/Crear
     [HttpGet]
     public IActionResult Crear()
     {
-        
-        return View();
-
+        return View(new Categoria());
     }
 
+    // POST: /Categorias/Crear
     [HttpPost]
-    public IActionResult Crear(Categoria categoria)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Crear(
+        [Bind("Nombre")] Categoria categoria)
     {
-        if (ModelState.IsValid)
+        categoria.Nombre = categoria.Nombre.Trim();
+
+        if (string.IsNullOrWhiteSpace(categoria.Nombre))
         {
-            _context.Categorias.Add(categoria);
-            _context.SaveChanges();
-            return RedirectToAction("Index");
+            ModelState.AddModelError(
+                nameof(Categoria.Nombre),
+                "El nombre es obligatorio.");
         }
+
+        if (!ModelState.IsValid)
+            return View(categoria);
+
+        await _categoriaService.Alta(categoria);
+
+        TempData["Mensaje"] =
+            "Categoría creada correctamente.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    // GET: /Categorias/Editar/5
+    [HttpGet]
+    public async Task<IActionResult> Editar(int id)
+    {
+        var categoria =
+            await _categoriaService.BuscarUno(id);
+
+        if (categoria == null)
+            return NotFound();
+
         return View(categoria);
     }
 
-    [HttpGet]
-    public IActionResult Editar(int id)
-    {
-        var categoria = _context.Categorias.Find(id);
-        if (categoria == null)
-        {
-            return NotFound();
-        }
-        return View(categoria);
-    }
+    // POST: /Categorias/Editar/5
     [HttpPost]
-    public IActionResult Editar(Categoria categoria)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Editar(
+        int id,
+        [Bind("Nombre")] Categoria categoria)
     {
-        if (ModelState.IsValid)
+        categoria.Nombre = categoria.Nombre.Trim();
+
+        if (string.IsNullOrWhiteSpace(categoria.Nombre))
         {
-            _context.Categorias.Update(categoria);
-            _context.SaveChanges();
-            return RedirectToAction("Index");
+            ModelState.AddModelError(
+                nameof(Categoria.Nombre),
+                "El nombre es obligatorio.");
         }
-        return View(categoria);
+
+        if (!ModelState.IsValid)
+        {
+            categoria.ID = id;
+            return View(categoria);
+        }
+
+        bool actualizado =
+            await _categoriaService.ActualizarNombre(
+                id, categoria.Nombre);
+
+        if (!actualizado)
+            return NotFound();
+
+        TempData["Mensaje"] =
+            "Categoría modificada correctamente.";
+
+        return RedirectToAction(nameof(Index));
     }
+
+    // GET: /Categorias/Eliminar/5
     [HttpGet]
-    public IActionResult Eliminar(int id)
+    public async Task<IActionResult> Eliminar(int id)
     {
-        var categoria = _context.Categorias.Find(id);
+        var categoria =
+            await _categoriaService.BuscarUno(id);
+
         if (categoria == null)
-        {
             return NotFound();
-        }
+
         return View(categoria);
     }
-    
-    [HttpPost, ActionName("Eliminar")]
-    public IActionResult EliminarConfirmado(int id)
+
+    // POST: /Categorias/Eliminar/5
+    [HttpPost]
+    [ActionName("Eliminar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EliminarConfirmado(int id)
     {
-        var categoria = _context.Categorias.Find(id);
+        var categoria =
+            await _categoriaService.BuscarUno(id);
+
         if (categoria == null)
-        {
             return NotFound();
+
+        if (await _categoriaService.TieneRecetas(id))
+        {
+            TempData["Error"] =
+                "No se puede eliminar una categoría " +
+                "que tiene recetas asociadas.";
+
+            return RedirectToAction(nameof(Index));
         }
-        _context.Categorias.Remove(categoria);
-        _context.SaveChanges();
-        return RedirectToAction("Index");
+
+        bool eliminado =
+            await _categoriaService.Baja(id);
+
+        if (!eliminado)
+            return NotFound();
+
+        TempData["Mensaje"] =
+            "Categoría eliminada correctamente.";
+
+        return RedirectToAction(nameof(Index));
     }
 }
+
+
