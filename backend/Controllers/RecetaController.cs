@@ -41,6 +41,22 @@ public class RecetasController : Controller
         return View(recetas);
     }
 
+    // GET: /Recetas/MasPopulares
+    [HttpGet]
+    public async Task<IActionResult> MasPopulares(int pagina = 1)
+    {
+        const int tamano = 10;
+
+        var (recetas, total) =
+            await _servicio.ListarPaginado(pagina, tamano);
+
+        ViewBag.PaginaActual = pagina;
+        ViewBag.TotalPaginas =
+            (int)Math.Ceiling((double)total / tamano);
+
+        return View(recetas);
+    }
+/*
     // GET: /Recetas/Detalle/5
     [HttpGet]
     public async Task<IActionResult> Detalle(int id)
@@ -444,6 +460,26 @@ public class RecetasController : Controller
 
         if (System.IO.File.Exists(ruta))
             System.IO.File.Delete(ruta);
+    }
+
     */
+
+    // GET: /Recetas/Populares
+[HttpGet]
+public async Task<IActionResult> Populares(int pagina = 1)
+{
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
+
+    var (recetas, total) =
+        await _servicio.ListarPaginado(pagina, tamano);
+
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
+
+    return View(recetas);
 }
+}
+
 
