@@ -31,19 +31,28 @@ public class RecetaService : ServicioBase<Receta>
         return (recetas, total);
     }
 
-    public async Task<List<Receta>> MasRecientes(DateTime ultimoVisto)
+    public async Task<List<Receta>> MasRecientes(DateTime? ultimoVisto)
     {
-        ultimoVisto = ultimoVisto.Kind switch
+        if (ultimoVisto.HasValue)
         {
-            DateTimeKind.Local => ultimoVisto.ToUniversalTime(),
-            DateTimeKind.Unspecified =>
-                DateTime.SpecifyKind(ultimoVisto, DateTimeKind.Utc),
-            _ => ultimoVisto
-        };
+            ultimoVisto = ultimoVisto.Value.Kind switch
+            {
+                DateTimeKind.Local => ultimoVisto.Value.ToUniversalTime(),
+                DateTimeKind.Unspecified =>
+                    DateTime.SpecifyKind(ultimoVisto.Value, DateTimeKind.Utc),
+                _ => ultimoVisto.Value
+            };
+        }
 
-        return await _db.Recetas
-            .AsNoTracking()
-            .Where(receta => receta.FechaDeLaReceta > ultimoVisto)
+        var consulta = _db.Recetas.AsNoTracking();
+
+        if (ultimoVisto.HasValue)
+        {
+            consulta = consulta.Where(
+                receta => receta.FechaDeLaReceta > ultimoVisto.Value);
+        }
+
+        return await consulta
             .OrderByDescending(receta => receta.FechaDeLaReceta)
             .Take(16)
             .ToListAsync();
