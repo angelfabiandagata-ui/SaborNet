@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using backend.data;
 using backend.Hubs;
 using backend.Models;
+using SaborNet.Service;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,7 @@ builder.Services.AddCors(options =>
                .AllowCredentials();
     });
 });
+builder.Services.AddScoped<RecetaService>();
 
 var app = builder.Build();
 

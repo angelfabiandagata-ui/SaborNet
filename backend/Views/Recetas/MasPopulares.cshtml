@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Recetas Populares";
+}
+
+<div class="container py-5">
+
+    <h1 class="text-center fw-bold mb-5">
+        Recetas populares
+    </h1>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+
+        @foreach (var receta in Model)
+        {
+            <div class="col">
+                <a asp-controller="Recetas"
+                   asp-action="Detalle"
+                   asp-route-id="@receta.ID"
+                   class="text-decoration-none text-dark">
+
+                    <div class="card h-100 shadow-sm">
+
+                        <img src="@receta.FotoPrincipal"
+                             class="card-img-top"
+                             alt="@receta.Titulo"
+                             style="height: 200px; object-fit: cover;" />
+
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-semibold mb-0">
+                                @receta.Titulo
+                            </h5>
+                        </div>
+
+                    </div>
+
+                </a>
+            </div>
+        }
+
+    </div>
+
+</div>

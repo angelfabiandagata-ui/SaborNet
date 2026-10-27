@@ -3,7 +3,6 @@
 
 using System.Security.Claims;
 using backend.Models;
-using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SaborNet.Service;
@@ -23,7 +22,7 @@ public class RecetasController : Controller
         _entorno = entorno;
     }
 
-    /*
+
     // GET: /Recetas
     [HttpGet]
     public async Task<IActionResult> Index(int pagina = 1)
@@ -46,6 +45,7 @@ public class RecetasController : Controller
     public async Task<IActionResult> MasPopulares(int pagina = 1)
     {
         const int tamano = 10;
+        pagina = Math.Max(1, pagina);
 
         var (recetas, total) =
             await _servicio.ListarPaginado(pagina, tamano);
@@ -56,6 +56,7 @@ public class RecetasController : Controller
 
         return View(recetas);
     }
+
 /*
     // GET: /Recetas/Detalle/5
     [HttpGet]
@@ -464,22 +465,7 @@ public class RecetasController : Controller
 
     */
 
-    // GET: /Recetas/Populares
-[HttpGet]
-public async Task<IActionResult> Populares(int pagina = 1)
-{
-    const int tamano = 10;
-    pagina = Math.Max(1, pagina);
 
-    var (recetas, total) =
-        await _servicio.ListarPaginado(pagina, tamano);
-
-    ViewBag.PaginaActual = pagina;
-    ViewBag.TotalPaginas =
-        (int)Math.Ceiling((double)total / tamano);
-
-    return View(recetas);
-}
 }
 
 
