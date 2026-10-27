@@ -1,6 +1,41 @@
-﻿@{
+﻿@model IEnumerable<backend.Models.Receta>
+
+@{
     ViewData["Title"] = "Recetas Recientes";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-5">
+
+    <h1 class="text-center fw-bold color-marron">
+        RECETAS RECIENTES
+    </h1>
+    <hr>
+
+
+    <p class="text-center text-muted">
+        Descubri las recetas mas modernas en la comunidad
+    </p>
+
+
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+
+        @foreach (var receta in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="@receta.FotoPrincipal" class="card-img-top" alt="@receta.Titulo"
+                         style="height: 200px; object-fit: cover;" />
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-semibold mb-0">
+                            @receta.Titulo
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+</div>

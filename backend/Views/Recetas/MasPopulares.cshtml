@@ -23,23 +23,16 @@
         @foreach (var receta in Model)
         {
             <div class="col">
-                <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@receta.ID"
-                   class="text-decoration-none text-dark">
+                <div class="card h-100 shadow-sm">
+                    <img src="@receta.FotoPrincipal" class="card-img-top" alt="@receta.Titulo"
+                         style="height: 200px; object-fit: cover;" />
 
-                    <div class="card h-100 shadow-sm">
-
-                        <img src="@receta.FotoPrincipal" class="card-img-top" alt="@receta.Titulo"
-                             style="height: 200px; object-fit: cover;" />
-
-                        <div class="card-body text-center">
-                            <h5 class="card-title fw-semibold mb-0">
-                                @receta.Titulo
-                            </h5>
-                        </div>
-
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-semibold mb-0">
+                            @receta.Titulo
+                        </h5>
                     </div>
-
-                </a>
+                </div>
             </div>
         }
 

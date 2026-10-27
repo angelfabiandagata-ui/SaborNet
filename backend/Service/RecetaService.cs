@@ -33,7 +33,16 @@ public class RecetaService : ServicioBase<Receta>
 
     public async Task<List<Receta>> MasRecientes(DateTime ultimoVisto)
     {
+        ultimoVisto = ultimoVisto.Kind switch
+        {
+            DateTimeKind.Local => ultimoVisto.ToUniversalTime(),
+            DateTimeKind.Unspecified =>
+                DateTime.SpecifyKind(ultimoVisto, DateTimeKind.Utc),
+            _ => ultimoVisto
+        };
+
         return await _db.Recetas
+            .AsNoTracking()
             .Where(receta => receta.FechaDeLaReceta > ultimoVisto)
             .OrderByDescending(receta => receta.FechaDeLaReceta)
             .Take(16)
