@@ -1,41 +1,87 @@
 @model backend.Models.RegistroViewModel
+
 @{
     ViewData["Title"] = "Registrarse";
 }
 
-<h3>Registrarse</h3>
+<div class="container d-flex justify-content-center align-items-center py-5">
+    <div class="card shadow-sm p-4 w-100"
+         style="max-width: 400px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border: 1px solid #54494B;">
 
-<form method="post" asp-action="Registrarse">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div>
-        <label asp-for="Nombre">Nombre de usuario</label>
-        <input asp-for="Nombre" placeholder="nombre">
-        <span asp-validation-for="Nombre" class="text-danger small"></span>
+        <h3 class="text-center mb-4">Crear cuenta</h3>
+
+        <form method="post" asp-action="Registrarse">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label">
+                    Nombre de usuario
+                </label>
+                <input asp-for="Nombre"
+                       class="form-control"
+                       placeholder="Nombre" />
+                <span asp-validation-for="Nombre"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">
+                    Contraseña
+                </label>
+                <input asp-for="Password"
+                       class="form-control"
+                       placeholder="******" />
+                <span asp-validation-for="Password"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfirmarPassword" class="form-label">
+                    Repetir contraseña
+                </label>
+                <input asp-for="ConfirmarPassword"
+                       class="form-control"
+                       placeholder="******" />
+                <span asp-validation-for="ConfirmarPassword"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">
+                    Email
+                </label>
+                <input asp-for="Email"
+                       class="form-control"
+                       placeholder="usuario@gmail.com" />
+                <span asp-validation-for="Email"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="AvatarUrl" class="form-label">
+                    Avatar (opcional)
+                </label>
+                <input asp-for="AvatarUrl"
+                       class="form-control"
+                       placeholder="URL del avatar" />
+                <span asp-validation-for="AvatarUrl"
+                      class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn boton-marron w-100">
+                Registrarse
+            </button>
+
+            <p class="text-center mt-3 mb-0">
+                ¿Ya tenés cuenta?
+                <a asp-controller="Login" asp-action="Login">
+                    Iniciá sesión
+                </a>
+            </p>
+
+        </form>
     </div>
+</div>
 
-    <div>
-        <label asp-for="Password">Contraseña</label>
-        <input asp-for="Password" placeholder="*****">
-        <span asp-validation-for="Password" class="text-danger small"></span>
-    </div>
-
-    <div>
-        <label asp-for="ConfirmarPassword">Repetir contraseña</label>
-        <input asp-for="ConfirmarPassword" placeholder="*****">
-        <span asp-validation-for="ConfirmarPassword" class="text-danger small"></span>
-    </div>
-
-    <div>
-        <label asp-for="Email">Email</label>
-        <input asp-for="Email" placeholder="usuario@gmail.com">
-        <span asp-validation-for="Email" class="text-danger small"></span>
-    </div>
-
-    <div>
-        <label asp-for="AvatarUrl">Avatar (opcional)</label>
-        <input asp-for="AvatarUrl" placeholder="URL del avatar">
-        <span asp-validation-for="AvatarUrl" class="text-danger small"></span>
-    </div>
-
-    <button type="submit">Registrarse</button>
-</form>
