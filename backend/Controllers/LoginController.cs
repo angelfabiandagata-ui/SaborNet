@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers;
 
@@ -20,6 +21,7 @@ public class LoginController : Controller
         _passwordHasher = passwordHasher;
     }
 
+    [AllowAnonymous]
     public IActionResult Login()
     {
         return View(new LoginViewModel());
@@ -88,5 +90,19 @@ public class LoginController : Controller
         await _db.SaveChangesAsync();
 
         return RedirectToAction(nameof(Login));
+    
     }
+
+        // POST: /Login/Logout
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return RedirectToAction("Index", "Home");
+    }
+
 }
