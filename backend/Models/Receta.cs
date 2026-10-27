@@ -23,6 +23,9 @@ public class Receta
     [DataType(DataType.ImageUrl)]
     public string FotoPrincipal { get; set; }="";
 
+    [DataType(DataType.DateTime)]
+    public DateTime FechaDeLaReceta { get; set; } = DateTime.UtcNow;
+
     [ForeignKey(nameof(Usuario))]
     public int UsuarioID { get; set; }
 
@@ -31,6 +34,7 @@ public class Receta
 
     public Usuario Usuario { get; set; } = null!;
     public Categoria Categoria { get; set; } = null!;
+
 
     public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; }
 }

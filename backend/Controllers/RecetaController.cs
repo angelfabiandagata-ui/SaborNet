@@ -57,6 +57,14 @@ public class RecetasController : Controller
         return View(recetas);
     }
 
+    // GET: /Recetas/MasRecientes?ultimoVisto=2026-01-01T00:00:00
+    [HttpGet]
+    public async Task<IActionResult> MasRecientes(DateTime ultimoVisto)
+    {
+        var recetas = await _servicio.MasRecientes(ultimoVisto);
+        return View(recetas);
+    }
+
 /*
     // GET: /Recetas/Detalle/5
     [HttpGet]
@@ -467,5 +475,4 @@ public class RecetasController : Controller
 
 
 }
-
 

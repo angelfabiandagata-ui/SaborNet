@@ -30,4 +30,13 @@ public class RecetaService : ServicioBase<Receta>
 
         return (recetas, total);
     }
+
+    public async Task<List<Receta>> MasRecientes(DateTime ultimoVisto)
+    {
+        return await _db.Recetas
+            .Where(receta => receta.FechaDeLaReceta > ultimoVisto)
+            .OrderByDescending(receta => receta.FechaDeLaReceta)
+            .Take(16)
+            .ToListAsync();
+    }
 }
