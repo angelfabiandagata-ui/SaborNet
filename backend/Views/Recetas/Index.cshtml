@@ -1,0 +1,27 @@
+@model IEnumerable<backend.Models.Receta>
+
+@{
+    ViewData["Title"] = "Recetas";
+}
+
+<h2 class="text-center">Recetas</h2>
+
+<div class="container mt-4">
+    <div class="row">
+        @foreach (var receta in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="@Url.Content($"~/images/{receta.FotoPrincipal}")" class="card-img-top" alt="@receta.Titulo" />
+                    <div class="card-body">
+                        <h5 class="card-title">@receta.Titulo</h5>
+                        <p class="card-text">@receta.Descripcion</p>
+                        <a href="@Url.Action("Details", "Receta", new { id = receta.ID })" class="btn btn-primary">Ver Detalles</a>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+

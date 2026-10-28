@@ -8,11 +8,11 @@ public class RecetaIngrediente
     public int ID { get; set; }
 
     [ForeignKey(nameof(Receta))]
-    public int RecetaId { get; set; }
+    public int RecetaID { get; set; }
     public Receta Receta { get; set; } = null!;
 
     [ForeignKey(nameof(Ingrediente))]
-    public int IngredienteId { get; set; }
+    public int IngredienteID { get; set; }
     public Ingrediente Ingrediente { get; set; } = null!;
 
      [Required] 

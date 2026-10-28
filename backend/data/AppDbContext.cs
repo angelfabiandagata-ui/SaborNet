@@ -19,16 +19,16 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<RecetaIngrediente>()
-            .HasKey(ri => new { ri.RecetaId, ri.IngredienteId });
+            .HasKey(ri => new { ri.RecetaID, ri.IngredienteID });
 
         modelBuilder.Entity<RecetaIngrediente>()
             .HasOne(ri => ri.Receta)
             .WithMany(r => r.RecetaIngredientes)
-            .HasForeignKey(ri => ri.RecetaId);
+            .HasForeignKey(ri => ri.RecetaID);
 
         modelBuilder.Entity<RecetaIngrediente>()
             .HasOne(ri => ri.Ingrediente)
             .WithMany(i => i.RecetaIngredientes)
-            .HasForeignKey(ri => ri.IngredienteId);
+            .HasForeignKey(ri => ri.IngredienteID);
     }
 }

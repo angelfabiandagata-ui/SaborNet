@@ -65,7 +65,7 @@ public class RecetasController : Controller
         return View(recetas);
     }
 
-/*
+
     // GET: /Recetas/Detalle/5
     [HttpGet]
     public async Task<IActionResult> Detalle(int id)
@@ -150,7 +150,7 @@ public class RecetasController : Controller
             };
 
             var ingredientes = modelo.Ingredientes
-                .Select(i => (i.IngredienteId, i.Cantidad));
+                .Select(i => (i.IngredienteID, i.Cantidad));
 
             await _servicio.CrearConIngredientes(
                 receta, ingredientes);
@@ -195,9 +195,9 @@ public class RecetasController : Controller
             CategoriaID = receta.CategoriaID,
             FotoActual = receta.FotoPrincipal,
             Ingredientes = ingredientes.Select(i =>
-                new IngredienteRecetaViewModel
+                new IngredienteFormularioViewModel
                 {
-                    IngredienteId = i.IngredienteId,
+                    IngredienteID = i.IngredienteID,
                     Cantidad = i.Cantidad
                 }).ToList()
         };
@@ -255,7 +255,7 @@ public class RecetasController : Controller
             };
 
             var ingredientes = modelo.Ingredientes
-                .Select(i => (i.IngredienteId, i.Cantidad));
+                .Select(i => (i.IngredienteID, i.Cantidad));
 
             bool actualizado =
                 await _servicio.ActualizarConIngredientes(
@@ -388,7 +388,7 @@ public class RecetasController : Controller
         }
 
         if (modelo.Ingredientes.Any(i =>
-                i.IngredienteId <= 0 ||
+                i.IngredienteID <= 0 ||
                 i.Cantidad <= 0))
         {
             ModelState.AddModelError(
@@ -397,7 +397,7 @@ public class RecetasController : Controller
         }
 
         var ids = modelo.Ingredientes
-            .Select(i => i.IngredienteId)
+            .Select(i => i.IngredienteID)
             .ToList();
 
         if (ids.Count != ids.Distinct().Count())
@@ -470,8 +470,4 @@ public class RecetasController : Controller
         if (System.IO.File.Exists(ruta))
             System.IO.File.Delete(ruta);
     }
-
-    */
-
-
 }

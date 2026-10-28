@@ -36,5 +36,5 @@ public class Receta
     public Categoria Categoria { get; set; } = null!;
 
 
-    public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; }
+    public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; } = new List<RecetaIngrediente>();
 }
