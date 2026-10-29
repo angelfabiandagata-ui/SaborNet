@@ -45,6 +45,19 @@ builder.Services.AddScoped<UsuarioService>();
 
 var app = builder.Build();
 
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.ExecuteSqlRawAsync("""
+        ALTER TABLE IF EXISTS "Ingredientes"
+            ADD COLUMN IF NOT EXISTS "ImagenDeIngrediente" text NOT NULL DEFAULT '';
+        """);
+    await db.Database.ExecuteSqlRawAsync("""
+        ALTER TABLE IF EXISTS "Ingredientes"
+            ALTER COLUMN "ImagenDeIngrediente" DROP DEFAULT;
+        """);
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
