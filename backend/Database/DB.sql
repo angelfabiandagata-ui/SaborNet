@@ -54,3 +54,7 @@ CREATE TABLE IF NOT EXISTS "comentarios" (
     "UsuarioID" integer NOT NULL REFERENCES "Usuarios" ("Id"),
     "RecetaID" integer NOT NULL REFERENCES "Recetas" ("ID")
 );
+
+
+ALTER TABLE "Usuarios"
+ADD COLUMN "Activo" BOOLEAN NOT NULL DEFAULT TRUE;

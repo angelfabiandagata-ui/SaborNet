@@ -148,4 +148,18 @@ public class UsuarioService : ServicioBase<Usuario>
 
         return true;
     }
+
+    public async Task<bool> CambiarEstado(int id, bool activo)
+{
+    var usuario = await Db.Usuarios.FindAsync(id);
+
+    if (usuario == null)
+        return false;
+
+    usuario.Activo = activo;
+
+    await Db.SaveChangesAsync();
+
+    return true;
+}
 }
