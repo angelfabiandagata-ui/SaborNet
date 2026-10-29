@@ -112,67 +112,14 @@
 
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <!-- MENÚ DESPLEGABLE -->
-                            <div class="dropdown">
-
-                                <button class="btn btn-outline-light dropdown-toggle"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false">
-
-                                    @User.Identity.Name
-
-                                </button>
-
-                                <ul class="dropdown-menu dropdown-menu-end">
-
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-controller="Usuarios"
-                                           asp-action="MiPerfil">
-                                            Mi Perfil
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-controller="Usuarios"
-                                           asp-action="EditarPerfil">
-                                            Editar Perfil
-                                        </a>
-                                    </li>
-
-                                    @if (User.IsInRole("Administrador"))
-                                    {
-                                        <li>
-                                            <hr class="dropdown-divider" />
-                                        </li>
-
-                                        <li>
-                                            <a class="dropdown-item"
-                                               asp-controller="Usuarios"
-                                               asp-action="Index">
-                                                Administrar Usuarios
-                                            </a>
-                                        </li>
-                                    }
-
-                                </ul>
-                            </div>
-
-                            <!-- CERRAR SESIÓN -->
-                            <form asp-controller="Login"
-                                  asp-action="Logout"
-                                  method="post">
-
-                                @Html.AntiForgeryToken()
-
-                                <button type="submit"
-                                        class="btn btn-outline-light text-nowrap">
-                                    Cerrar Sesión
-                                </button>
-
-                            </form>
+    
+                            
+                            
+                            <a class="btn btn-outline-light txt-nowrap"
+                               asp-controller="Usuarios"
+                               asp-action="MiPerfil">
+                                @User.Identity.Name
+                            </a>
                         }
                         else
                         {

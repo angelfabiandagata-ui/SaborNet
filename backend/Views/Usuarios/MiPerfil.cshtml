@@ -45,10 +45,36 @@
             <p>@Model.rol</p>
         </div>
 
+<div class="d-grid gap-2 mt-4">
         <a asp-controller="Usuarios"
            asp-action="EditarPerfil"
            class="btn boton-marron w-100">
             Editar Perfil
         </a>
+
+        @if (User.IsInRole("Administrador"))
+    {
+        <a asp-controller="Usuarios"
+           asp-action="Index"
+           class="btn btn-dark">
+            Administrar Usuarios
+        </a>
+    }
+
+
+    <form asp-controller="Login"
+          asp-action="Logout"
+          method="post"
+          class="w-100">
+
+        @Html.AntiForgeryToken()
+
+        <button type="submit"
+                class="btn btn-outline-danger w-100">
+            Cerrar Sesión
+        </button>
+    </form>
+</div>
+
     </div>
 </div>
