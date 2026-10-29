@@ -1,8 +1,16 @@
 
 @model IEnumerable<backend.Models.Usuario>
 
+@using System.Security.Claims
+
 @{
     ViewData["Title"] = "Administrar Usuarios";
+
+    int paginaActual = ViewBag.PaginaActual ?? 1;
+    int totalPaginas = ViewBag.TotalPaginas ?? 1;
+
+    string? miId = User.FindFirstValue(
+        ClaimTypes.NameIdentifier);
 }
 
 <div class="container mt-4">
@@ -18,13 +26,22 @@
         </div>
     }
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
     <div class="table-responsive">
         <table class="table table-striped table-bordered align-middle">
+
             <thead>
                 <tr>
                     <th>Avatar</th>
                     <th>Nombre</th>
                     <th>Rol</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -32,6 +49,9 @@
             <tbody>
                 @foreach (var usuario in Model)
                 {
+                    bool esMiCuenta =
+                        miId == usuario.Id.ToString();
+
                     <tr>
                         <td>
                             @if (!string.IsNullOrEmpty(usuario.AvatarUrl))
@@ -39,49 +59,126 @@
                                 <img src="@usuario.AvatarUrl"
                                      alt="Avatar"
                                      class="rounded-circle"
-                                     style="width: 45px; height: 45px; object-fit: cover;" />
+                                     style="width:45px;height:45px;object-fit:cover;" />
                             }
                         </td>
 
-                        <td>@usuario.Nombre</td>
+                        <td>
+                            @usuario.Nombre
 
-                        <td>@usuario.rol</td>
+                            @if (esMiCuenta)
+                            {
+                                <span class="text-muted small">
+                                    (Vos)
+                                </span>
+                            }
+                        </td>
 
                         <td>
-                            <a asp-action="Perfil"
-                               asp-route-id="@usuario.Id"
-                               class="btn btn-sm btn-outline-secondary mb-1">
-                                Ver
-                            </a>
+                            @usuario.rol
+                        </td>
 
-                            <form asp-action="CambiarRol"
-                                  asp-route-id="@usuario.Id"
-                                  method="post"
-                                  class="d-inline">
+                        <td>
+                            @if (usuario.Activo)
+                            {
+                                <span class="badge bg-success">
+                                    Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    Inactivo
+                                </span>
+                            }
+                        </td>
 
-                                @Html.AntiForgeryToken()
+                        <td>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
 
-                                <select name="nuevoRol"
-                                        class="form-select form-select-sm d-inline-block"
-                                        style="width: auto;">
-                                    @foreach (var rol in Enum.GetValues<backend.Models.Usuario.Rol>())
+                                <!-- VER PERFIL -->
+                                <a asp-controller="Usuarios"
+                                   asp-action="Perfil"
+                                   asp-route-id="@usuario.Id"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    Ver
+                                </a>
+
+                                <!-- CAMBIAR ROL -->
+                                <form asp-controller="Usuarios"
+                                      asp-action="CambiarRol"
+                                      method="post"
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@usuario.Id" />
+
+                                    @if (usuario.rol ==
+                                        backend.Models.Usuario.Rol.Administrador)
                                     {
-                                        if (rol == usuario.rol)
-                                        {
-                                            <option value="@rol" selected>@rol</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@rol">@rol</option>
-                                        }
-                                    }
-                                </select>
+                                        <input type="hidden"
+                                               name="nuevoRol"
+                                               value="Usuario" />
 
-                                <button type="submit"
-                                        class="btn btn-sm boton-marron">
-                                    Cambiar Rol
-                                </button>
-                            </form>
+                                        <button type="submit"
+                                                class="btn btn-sm boton-marron"
+                                                disabled="@(!usuario.Activo || esMiCuenta)">
+                                            Hacer usuario
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <input type="hidden"
+                                               name="nuevoRol"
+                                               value="Administrador" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm boton-marron"
+                                                disabled="@(!usuario.Activo || esMiCuenta)">
+                                            Hacer Admin
+                                        </button>
+                                    }
+                                </form>
+
+                                <!-- ALTA / BAJA LÓGICA -->
+                                <form asp-controller="Usuarios"
+                                      asp-action="CambiarEstado"
+                                      method="post"
+                                      class="d-inline"
+                                      onsubmit="return confirm('¿Confirmás el cambio de estado de este usuario?');">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@usuario.Id" />
+
+                                    <input type="hidden"
+                                           name="activo"
+                                           value="@(usuario.Activo ? "false" : "true")" />
+
+                                    @if (usuario.Activo)
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                disabled="@esMiCuenta">
+                                            Baja
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-success"
+                                                disabled="@esMiCuenta">
+                                            Alta
+                                        </button>
+                                    }
+                                </form>
+
+                            </div>
                         </td>
                     </tr>
                 }
@@ -89,12 +186,9 @@
         </table>
     </div>
 
-    @{
-        int paginaActual = ViewBag.PaginaActual ?? 1;
-        int totalPaginas = ViewBag.TotalPaginas ?? 1;
-    }
-
+    <!-- PAGINACIÓN -->
     <div class="d-flex justify-content-center gap-2 mt-4">
+
         @if (paginaActual > 1)
         {
             <a asp-action="Index"
@@ -116,5 +210,6 @@
                 Siguiente
             </a>
         }
+
     </div>
 </div>

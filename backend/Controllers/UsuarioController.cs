@@ -276,42 +276,96 @@ public class UsuariosController : Controller
         return View(usuarios);
     }
 
-    // POST: /Usuarios/CambiarRol/5
-    [Authorize(Roles = "Administrador")]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CambiarRol(
-        int id, Usuario.Rol nuevoRol)
+ // POST: /Usuarios/CambiarRol
+[Authorize(Roles = "Administrador")]
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> CambiarRol(
+    int id, Usuario.Rol nuevoRol)
+{
+    if (!Enum.IsDefined(typeof(Usuario.Rol), nuevoRol))
+        return BadRequest("Rol inválido.");
+
+    var usuario = await _servicio.BuscarUno(id);
+
+    if (usuario == null)
+        return NotFound();
+
+    if (id == ObtenerUsuarioId())
     {
-        if (!Enum.IsDefined(
-            typeof(Usuario.Rol), nuevoRol))
-        {
-            return BadRequest("Rol inválido.");
-        }
-
-        var usuario = await _servicio.BuscarUno(id);
-
-        if (usuario == null)
-            return NotFound();
-
-        // Evitar modificar el propio rol.
-        if (id == ObtenerUsuarioId())
-        {
-            return BadRequest(
-                "No podés modificar tu propio rol.");
-        }
-
-        bool actualizado =
-            await _servicio.CambiarRol(id, nuevoRol);
-
-        if (!actualizado)
-            return NotFound();
-
-        TempData["Mensaje"] =
-            "Rol actualizado correctamente.";
+        TempData["Error"] =
+            "No podés modificar tu propio rol.";
 
         return RedirectToAction(nameof(Index));
     }
+
+    if (!usuario.Activo)
+    {
+        TempData["Error"] =
+            "No podés cambiar el rol de un usuario inactivo.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    if (usuario.rol == nuevoRol)
+    {
+        TempData["Error"] =
+            "El usuario ya tiene ese rol.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    bool actualizado =
+        await _servicio.CambiarRol(id, nuevoRol);
+
+    if (!actualizado)
+        return NotFound();
+
+    TempData["Mensaje"] =
+        "Rol actualizado correctamente.";
+
+    return RedirectToAction(nameof(Index));
+}
+
+// POST: /Usuarios/CambiarEstado
+[Authorize(Roles = "Administrador")]
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> CambiarEstado(int id, bool activo)
+{
+    if (id == ObtenerUsuarioId())
+    {
+        TempData["Error"] =
+            "No podés dar de alta o de baja tu propia cuenta.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    var usuario = await _servicio.BuscarUno(id);
+
+    if (usuario == null)
+        return NotFound();
+
+    if (usuario.Activo == activo)
+    {
+        TempData["Error"] =
+            "El usuario ya tiene ese estado.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    bool actualizado =
+        await _servicio.CambiarEstado(id, activo);
+
+    if (!actualizado)
+        return NotFound();
+
+    TempData["Mensaje"] = activo
+        ? "Usuario dado de alta correctamente."
+        : "Usuario dado de baja correctamente.";
+
+    return RedirectToAction(nameof(Index));
+}
 
     // OBTENER ID DEL USUARIO AUTENTICADO
     private int? ObtenerUsuarioId()

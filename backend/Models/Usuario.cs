@@ -26,4 +26,6 @@ public class Usuario
     public string? AvatarUrl  {get; set;}="";
     [Required]
     public Rol rol {get; set;}
+
+    public bool Activo { get; set; } = true;
 }
