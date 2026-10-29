@@ -105,4 +105,12 @@ public class LoginController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+      // GET: /Cuenta/AccesoDenegado
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult AccesoDenegado()
+    {
+        return View();
+    }
+
 }
