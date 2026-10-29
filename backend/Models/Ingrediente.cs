@@ -4,13 +4,16 @@ namespace backend.Models;
 
 public class Ingrediente
 {
-    public int ID{get; set;}
+    public int ID { get; set; }
 
     [Required(ErrorMessage = "El ingrediente debe tener nombre")]
-    public String nombre {get; set;} ="";
+    public string nombre { get; set; } = "";
 
     [Required(ErrorMessage = "El ingrediente debe tener unidad de medida")]
-    public String unidadDeMedida {get; set;} ="";
+    public string unidadDeMedida { get; set; } = "";
+
+    [Required(ErrorMessage = "El ingrediente debe tener una imagen")]
+    public string ImagenDeIngrediente { get; set; } = ""; 
 
     public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; } = new List<RecetaIngrediente>();
 }

@@ -12,14 +12,17 @@ namespace backend.Controllers;
 public class RecetasController : Controller
 {
     private readonly RecetaService _servicio;
+    private readonly IngredienteService _Iservicio;
     private readonly IWebHostEnvironment _entorno;
 
     public RecetasController(
         RecetaService servicio,
+        IngredienteService Iservicio,
         IWebHostEnvironment entorno)
     {
         _servicio = servicio;
         _entorno = entorno;
+        _Iservicio = Iservicio;
     }
 
 
@@ -99,16 +102,20 @@ public class RecetasController : Controller
         }));
     }
 
-    // GET: /Recetas/Crear
-    [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> Crear()
-    {
-        ViewBag.Categorias =
-            await _servicio.ObtenerCategorias();
 
-        return View(new RecetaFormularioViewModel());
-    }
+[Authorize]
+[HttpGet]
+public async Task<IActionResult> Crear()
+{
+    ViewBag.Categorias = await _servicio.ObtenerCategorias();
+    
+    var vista = new RecetaFormularioViewModel();
+
+    vista.Ingredientes_Basicos = await _Iservicio.RetornarIngredientesAlfabeticamente();
+
+    return View(vista); 
+}
+
 
     // POST: /Recetas/Crear
     [Authorize]
