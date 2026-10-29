@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
 using backend.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SaborNet.Service;
@@ -29,12 +30,18 @@ public class UsuariosController : Controller
         int? id = ObtenerUsuarioId();
 
         if (id == null)
-            return Challenge();
+        {
+            await HttpContext.SignOutAsync();
+            return RedirectToAction("Login", "Login");
+        }
 
         var usuario = await _servicio.BuscarUno(id.Value);
 
         if (usuario == null)
-            return NotFound();
+        {
+            await HttpContext.SignOutAsync();
+            return RedirectToAction("Login", "Login");
+        }
 
         return View(usuario);
     }

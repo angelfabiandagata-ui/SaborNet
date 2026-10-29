@@ -31,9 +31,10 @@ public class IngredientesController : Controller
 
     // GET: /Ingredientes
     [HttpGet]
-    public IActionResult Index()
+    public  async Task<IActionResult> Index()
     {
-        return View();
+        var (items, total) = await _servicio.ListarPaginado(1, int.MaxValue, null);
+        return View(items);
     }
 
     // GET: /Ingredientes/Listar?pagina=1&buscar=harina
@@ -85,39 +86,67 @@ public class IngredientesController : Controller
         });
     }
 
+    // GET: /Ingredientes/Crear
+    [HttpGet]
+    public IActionResult Crear()
+    {
+        return View();
+    }
+
     // POST: /Ingredientes/Crear
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Crear(
-        [FromBody] IngredienteDto datos)
+     string nombre,
+     string unidadDeMedida,
+     IFormFile? imagenDeIngrediente,
+     [FromServices] IWebHostEnvironment entorno)
     {
-        if (datos == null)
-            return BadRequest(new { mensaje = "Datos inválidos" });
+        nombre = nombre?.Trim() ?? "";
+        unidadDeMedida = unidadDeMedida?.Trim() ?? "";
 
-        datos.nombre = datos.nombre?.Trim() ?? "";
-        datos.unidadDeMedida =
-            datos.unidadDeMedida?.Trim() ?? "";
+        if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(unidadDeMedida))
+        {
+            ModelState.AddModelError("", "Completá todos los campos obligatorios.");
+            return View();
+        }
 
-        ModelState.Clear();
+        string? rutaImagen = null;
 
-        if (!TryValidateModel(datos))
-            return BadRequest(ModelState);
+        if (imagenDeIngrediente != null && imagenDeIngrediente.Length > 0)
+        {
+            string webRootPath = entorno.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string carpeta = Path.Combine(webRootPath, "imagenes");
+
+            if (!Directory.Exists(carpeta))
+            {
+                Directory.CreateDirectory(carpeta);
+            }
+
+            string extension = Path.GetExtension(imagenDeIngrediente.FileName).ToLowerInvariant();
+            string nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+            string rutaCompleta = Path.Combine(carpeta, nombreArchivo);
+
+            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            {
+                await imagenDeIngrediente.CopyToAsync(stream);
+            }
+
+            rutaImagen = nombreArchivo;
+        }
 
         var ingrediente = new Ingrediente
         {
-            nombre = datos.nombre,
-            unidadDeMedida = datos.unidadDeMedida
+            nombre = nombre,
+            unidadDeMedida = unidadDeMedida,
+            ImagenDeIngrediente = rutaImagen ?? ""
         };
 
         await _servicio.Alta(ingrediente);
 
-        return Ok(new
-        {
-            mensaje = "Ingrediente creado correctamente",
-            id = ingrediente.ID
-        });
+        TempData["Mensaje"] = "Ingrediente creado correctamente";
+        return RedirectToAction(nameof(Index));
     }
-
     // POST: /Ingredientes/Editar/5
     [HttpPost]
     [ValidateAntiForgeryToken]
