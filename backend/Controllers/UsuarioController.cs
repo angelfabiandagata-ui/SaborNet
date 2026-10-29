@@ -1,5 +1,6 @@
 
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -88,10 +89,11 @@ public class UsuariosController : Controller
             return NotFound();
 
         string nombre = datos.Nombre?.Trim() ?? "";
+
         string email = datos.Email?.Trim()
             .ToLowerInvariant() ?? "";
 
-        // Validaciones de los campos editables
+        // VALIDAR NOMBRE
         if (nombre.Length < 3 || nombre.Length > 20)
         {
             ModelState.AddModelError(
@@ -99,17 +101,17 @@ public class UsuariosController : Controller
                 "El nombre debe tener entre 3 y 20 caracteres.");
         }
 
+        // VALIDAR EMAIL
         if (string.IsNullOrWhiteSpace(email) ||
             email.Length > 30 ||
-            !new System.ComponentModel.DataAnnotations
-                .EmailAddressAttribute().IsValid(email))
+            !new EmailAddressAttribute().IsValid(email))
         {
             ModelState.AddModelError(
                 nameof(Usuario.Email),
                 "Ingresá un email válido de hasta 30 caracteres.");
         }
 
-        // Verificar que el correo no esté registrado
+        // COMPROBAR EMAIL DUPLICADO
         if (!string.IsNullOrWhiteSpace(email))
         {
             var otroUsuario =
@@ -124,7 +126,7 @@ public class UsuariosController : Controller
             }
         }
 
-        // Validar imagen
+        // VALIDAR AVATAR
         if (avatar != null)
         {
             if (avatar.Length == 0 ||
@@ -146,10 +148,28 @@ public class UsuariosController : Controller
                     "avatar",
                     "Solo se permiten imágenes JPG y PNG.");
             }
+
+            // Comprobar la firma real del archivo
+            if (avatar.Length > 0 &&
+                avatar.Length <= 2 * 1024 * 1024 &&
+                (extension == ".jpg" ||
+                 extension == ".jpeg" ||
+                 extension == ".png"))
+            {
+                if (!await EsImagenValida(avatar, extension))
+                {
+                    ModelState.AddModelError(
+                        "avatar",
+                        "El archivo no es una imagen JPG o PNG válida.");
+                }
+            }
         }
 
+        // Estas propiedades no se editan
+        // desde el formulario.
         ModelState.Remove(nameof(Usuario.Password));
         ModelState.Remove(nameof(Usuario.rol));
+        ModelState.Remove(nameof(Usuario.AvatarUrl));
 
         if (!ModelState.IsValid)
         {
@@ -159,19 +179,27 @@ public class UsuariosController : Controller
             return View(datos);
         }
 
+        // IMPORTANTE:
+        // Guardamos la ruta anterior ANTES de actualizar
+        // la entidad en Entity Framework.
+        string? avatarAnterior = usuario.AvatarUrl;
         string? nuevoAvatar = null;
 
         try
         {
+            // GUARDAR NUEVO AVATAR
             if (avatar != null)
+            {
                 nuevoAvatar = await GuardarAvatar(avatar);
+            }
 
+            // ACTUALIZAR BASE DE DATOS
             bool actualizado =
                 await _servicio.ActualizarPerfil(
                     usuario.Id,
                     nombre,
                     email,
-                    nuevoAvatar ?? usuario.AvatarUrl);
+                    nuevoAvatar ?? avatarAnterior ?? "");
 
             if (!actualizado)
             {
@@ -181,24 +209,46 @@ public class UsuariosController : Controller
                 return NotFound();
             }
 
-            if (nuevoAvatar != null)
-                EliminarAvatar(usuario.AvatarUrl);
+            // BORRAR AVATAR ANTERIOR
+            if (nuevoAvatar != null &&
+                !string.Equals(
+                    avatarAnterior,
+                    nuevoAvatar,
+                    StringComparison.Ordinal))
+            {
+                EliminarAvatar(avatarAnterior);
+            }
 
             TempData["Mensaje"] =
-                "Perfil actualizado correctamente";
+                "Perfil actualizado correctamente.";
 
             return RedirectToAction(nameof(MiPerfil));
         }
         catch
         {
+            // Si falla la operación, intentamos
+            // limpiar el archivo nuevo.
+            // La limpieza no debe ocultar
+            // la excepción original.
             if (nuevoAvatar != null)
-                EliminarAvatar(nuevoAvatar);
+            {
+                try
+                {
+                    EliminarAvatar(nuevoAvatar);
+                }
+                catch
+                {
+                    // Registrar el error de limpieza
+                    // si se agrega ILogger.
+                }
+            }
 
             throw;
         }
     }
 
     // GET: /Usuarios
+    // SOLO ADMINISTRADORES
     [Authorize(Roles = "Administrador")]
     [HttpGet]
     public async Task<IActionResult> Index(int pagina = 1)
@@ -212,6 +262,7 @@ public class UsuariosController : Controller
                 pagina, tamano);
 
         ViewBag.PaginaActual = pagina;
+
         ViewBag.TotalPaginas =
             (int)Math.Ceiling((double)total / tamano);
 
@@ -225,14 +276,18 @@ public class UsuariosController : Controller
     public async Task<IActionResult> CambiarRol(
         int id, Usuario.Rol nuevoRol)
     {
-        if (!Enum.IsDefined(typeof(Usuario.Rol), nuevoRol))
+        if (!Enum.IsDefined(
+            typeof(Usuario.Rol), nuevoRol))
+        {
             return BadRequest("Rol inválido.");
+        }
 
         var usuario = await _servicio.BuscarUno(id);
 
         if (usuario == null)
             return NotFound();
 
+        // Evitar modificar el propio rol.
         if (id == ObtenerUsuarioId())
         {
             return BadRequest(
@@ -251,6 +306,7 @@ public class UsuariosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // OBTENER ID DEL USUARIO AUTENTICADO
     private int? ObtenerUsuarioId()
     {
         string? valor = User.FindFirstValue(
@@ -261,11 +317,53 @@ public class UsuariosController : Controller
             : null;
     }
 
+    // VALIDAR LA FIRMA DE LA IMAGEN
+    private async Task<bool> EsImagenValida(
+        IFormFile archivo,
+        string extension)
+    {
+        byte[] firma = new byte[8];
+
+        await using var stream = archivo.OpenReadStream();
+
+        int leidos = await stream.ReadAsync(
+            firma.AsMemory(0, firma.Length));
+
+        if (extension == ".jpg" ||
+            extension == ".jpeg")
+        {
+            return leidos >= 3 &&
+                   firma[0] == 0xFF &&
+                   firma[1] == 0xD8 &&
+                   firma[2] == 0xFF;
+        }
+
+        if (extension == ".png")
+        {
+            byte[] firmaPng =
+            {
+                0x89, 0x50, 0x4E, 0x47,
+                0x0D, 0x0A, 0x1A, 0x0A
+            };
+
+            return leidos == 8 &&
+                   firma.SequenceEqual(firmaPng);
+        }
+
+        return false;
+    }
+
+    // GUARDAR AVATAR EN WWWROOT
     private async Task<string> GuardarAvatar(
         IFormFile archivo)
     {
+        string webRoot = _entorno.WebRootPath
+            ?? Path.Combine(
+                _entorno.ContentRootPath,
+                "wwwroot");
+
         string carpeta = Path.Combine(
-            _entorno.WebRootPath,
+            webRoot,
             "imagenes",
             "avatares");
 
@@ -279,37 +377,62 @@ public class UsuariosController : Controller
 
         string ruta = Path.Combine(carpeta, nombre);
 
-        await using var stream = new FileStream(
-            ruta, FileMode.CreateNew);
+        await using (var stream = new FileStream(
+            ruta, FileMode.CreateNew))
+        {
+            await archivo.CopyToAsync(stream);
+        }
 
-        await archivo.CopyToAsync(stream);
+        // Verificar que el archivo se creó.
+        if (!System.IO.File.Exists(ruta))
+        {
+            throw new IOException(
+                "No se pudo guardar el avatar.");
+        }
+
+        Console.WriteLine(
+            $"Avatar guardado: {ruta}");
 
         return $"/imagenes/avatares/{nombre}";
     }
 
+    // ELIMINAR AVATAR ANTERIOR
     private void EliminarAvatar(string? rutaRelativa)
     {
         if (string.IsNullOrWhiteSpace(rutaRelativa))
             return;
 
-        const string prefijo = "/imagenes/avatares/";
+        const string prefijo =
+            "/imagenes/avatares/";
 
         if (!rutaRelativa.StartsWith(
-            prefijo, StringComparison.Ordinal))
+            prefijo,
+            StringComparison.Ordinal))
+        {
             return;
+        }
 
-        string nombre = rutaRelativa[prefijo.Length..];
+        string nombre =
+            rutaRelativa[prefijo.Length..];
 
+        // Evitar rutas fuera de la carpeta.
         if (nombre != Path.GetFileName(nombre))
             return;
 
+        string webRoot = _entorno.WebRootPath
+            ?? Path.Combine(
+                _entorno.ContentRootPath,
+                "wwwroot");
+
         string ruta = Path.Combine(
-            _entorno.WebRootPath,
+            webRoot,
             "imagenes",
             "avatares",
             nombre);
 
         if (System.IO.File.Exists(ruta))
+        {
             System.IO.File.Delete(ruta);
+        }
     }
 }
