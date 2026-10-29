@@ -17,7 +17,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options => options.LoginPath = "/Login/Login");
+    .AddCookie(options => {
+        // Ruta para usuarios no autenticados (Login)
+        options.LoginPath = "/Login/Login";
+        
+        // ESTA ES LA LÍNEA PARA EL ACCESO DENEGADO
+        options.AccessDeniedPath = "/Acceso/AccesoDenegado"; 
+    });
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
