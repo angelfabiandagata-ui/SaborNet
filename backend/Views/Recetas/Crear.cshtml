@@ -4,6 +4,17 @@
     ViewData["Title"] = "Crear Receta";
 }
 
+<head>
+    <!-- CSS de Tom Select -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    
+    <style>
+        /* Estilo mínimo para acomodar las imágenes */
+        .ts-wrapper .option, .ts-wrapper .item { display: flex; align-items: center; }
+        .ts-img { width: 30px; height: 30px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
+    </style>
+</head>
+
 <div class="container d-flex justify-content-center align-items-center py-5">
     <div class="card shadow-sm p-4 w-100" style="max-width: 600px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border: 1px solid #54494B;">
 
@@ -49,6 +60,17 @@
                 <span asp-validation-for="CategoriaID" class="text-danger small"></span>
             </div>
 
+            <div class="mb-3">
+                <label for="miBuscador" class="form-label">Selecciona un Ingrediente:</label>
+                <select id="miBuscador" class="form-control" style="width: 100%;">
+                    <option value="">Buscar ingrediente...</option>
+                    @foreach (var ing in Model.Ingredientes_Basicos)
+                    {
+                        <option value="@ing.ID" data-src="/imagenes/@ing.ImagenDeIngrediente">@ing.nombre</option>
+                    }
+                </select>
+            </div>
+
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <button type="submit" class="btn boton-marron w-100 mt-2">
@@ -58,3 +80,16 @@
         </form>
     </div>
 </div>
+
+<!-- JS oficial de Tom Select -->
+<script src="https://jsdelivr.net"></script>
+
+<script>
+    // Inicialización ultralimpia: Tom Select mapea 'data-src' automáticamente a 'data.src'
+    new TomSelect('#miBuscador', {
+        render: {
+            option: (data, escape) => `<div><img src="${escape(data.src)}" class="ts-img">${escape(data.text)}</div>`,
+            item: (data, escape) => `<div><img src="${escape(data.src)}" class="ts-img">${escape(data.text)}</div>`
+        }
+    });
+</script>
