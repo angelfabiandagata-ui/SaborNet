@@ -5,7 +5,14 @@
     ViewData["Title"] = "Ingredientes";
 }
 <div class="container py-5">
-    <h2>Lista de Ingredientes</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Lista de Ingredientes</h2>
+
+        <a asp-action="Crear" asp-controller="Ingredientes"
+           class="btn boton-marron">
+           <i class="fa-solid fa-plus"></i> Crear
+        </a>
+    </div>
 
     @if (Model != null && Model.Any())
     {
@@ -19,13 +26,14 @@
                                 <h5 class="mb-1">@ingrediente.nombre</h5>
                                 <p class="text-muted mb-2">Unidad: @ingrediente.unidadDeMedida</p>
                                 <a asp-controller="Ingredientes" asp-action="Editar" asp-route-id="@ingrediente.ID"
-                                   class="btn boton-marron btn-sm" >
+                                   class="btn boton-marron btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </div>
                             <div>
                                 <img src="/imagenes/@ingrediente.ImagenDeIngrediente" alt="@ingrediente.nombre"
-                                     style="width: 80px; height: 80px; object-position: center; object-fit: cover; border-radius: 8px; aling-items= center " class="border border-2" />
+                                     style="width: 80px; height: 80px; object-position: center; object-fit: cover; border-radius: 8px; aling-items= center "
+                                     class="border border-2" />
                             </div>
                         </div>
                     </div>
