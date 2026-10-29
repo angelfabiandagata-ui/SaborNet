@@ -1,0 +1,81 @@
+
+@model backend.Models.Usuario
+
+@{
+    ViewData["Title"] = "Editar Perfil";
+}
+
+<div class="container d-flex justify-content-center py-5">
+    <div class="card shadow-sm p-4 w-100"
+         style="max-width: 500px; border: 1px solid #54494B;">
+
+        <h3 class="text-center mb-4">Editar Perfil</h3>
+
+        <form asp-controller="Usuarios"
+              asp-action="EditarPerfil"
+              method="post"
+              enctype="multipart/form-data">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"></div>
+
+            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+            {
+                <div class="text-center mb-4">
+                    <img src="@Model.AvatarUrl"
+                         alt="Avatar actual"
+                         class="rounded-circle"
+                         style="width: 120px; height: 120px; object-fit: cover;" />
+                </div>
+            }
+
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label">
+                    Nombre de usuario
+                </label>
+                <input asp-for="Nombre"
+                       class="form-control"
+                       placeholder="Tu nombre" />
+                <span asp-validation-for="Nombre"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">
+                    Email
+                </label>
+                <input asp-for="Email"
+                       class="form-control"
+                       placeholder="usuario@gmail.com" />
+                <span asp-validation-for="Email"
+                      class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Cambiar avatar</label>
+                <input type="file"
+                       name="avatar"
+                       accept=".jpg,.jpeg,.png"
+                       class="form-control" />
+                <span class="text-danger">
+                    @Html.ValidationMessage("avatar")
+                </span>
+                <small class="text-muted">
+                    JPG o PNG. Máximo 2 MB.
+                </small>
+            </div>
+
+            <button type="submit"
+                    class="btn boton-marron w-100">
+                Guardar Cambios
+            </button>
+
+            <a asp-action="MiPerfil"
+               class="btn btn-outline-secondary w-100 mt-2">
+                Cancelar
+            </a>
+        </form>
+    </div>
+</div>

@@ -34,6 +34,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddScoped<RecetaService>();
+builder.Services.AddScoped<UsuarioService>();
 
 var app = builder.Build();
 

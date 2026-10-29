@@ -1,88 +1,223 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿
+<!DOCTYPE html>
+<html lang="es">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - backend</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - SaborNet</title>
+
     <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/backend.styles.css" asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/backend.styles.css"
+          asp-append-version="true" />
 </head>
 
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark border-bottom box-shadow mb-3"
+        <nav class="navbar navbar-expand-lg navbar-dark border-bottom box-shadow mb-3"
              style="background-color: #54494B;">
+
             <div class="container-fluid">
-                <a class="navbar-brand fw-medium text-white fs-4" asp-area="" asp-controller="Home"
-                   asp-action="Index">Sabor<b>Net</b></a>
-        
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false"
-                        aria-label="Toggle navigation">
+
+                <!-- LOGO -->
+                <a class="navbar-brand fw-medium text-white fs-4"
+                   asp-controller="Home"
+                   asp-action="Index">
+                    Sabor<b>Net</b>
+                </a>
+
+                <!-- MENÚ RESPONSIVE -->
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#menuPrincipal"
+                        aria-controls="menuPrincipal"
+                        aria-expanded="false"
+                        aria-label="Abrir menú">
+
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav mx-auto mb-2 mb-sm-0">
+                <div class="collapse navbar-collapse"
+                     id="menuPrincipal">
+
+                    <!-- ENLACES PRINCIPALES -->
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Recetas" asp-action="MasPopulares">Recetas
-                                Populares</a>
-                            </li>
+                            <a class="nav-link text-white"
+                               asp-controller="Recetas"
+                               asp-action="MasPopulares">
+                                Recetas Populares
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-white"
+                               asp-controller="Recetas"
+                               asp-action="MasRecientes">
+                                Recetas Nuevas
+                            </a>
+                        </li>
+
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
                             <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Recetas"
-                                   asp-action="MasRecientes">Recetas Nuevas</a>
-                            </li>
-                        </ul>
-
-                        <div class="d-flex align-items-center">
-                            <form class="d-flex mx-3 my-2 my-sm-0" role="search">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Busca una receta"
-                                           aria-label="Buscar receta">
-                                    <button class="btn btn-light" type="button" id="button-addon">
-                                        <i class="fa-solid fa-magnifying-glass"></i> Buscar
-                                    </button>
-                                </div>
-                            </form>
-
-                            @if (User.Identity?.IsAuthenticated == true)
-                            {
-                                <form asp-controller="Login" asp-action="Logout" method="post">
-                                    <button type="submit " class="btn btn-outline-light">Cerrar Sesion</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <a class="btn btn-outline-light text-nowrap" asp-area="" asp-controller="Login"
-                                   asp-action="Login">
-                                    <i class="fa-solid fa-user me-1"></i> Iniciar Sesión
+                                <a class="nav-link text-white"
+                                   asp-controller="Recetas"
+                                   asp-action="Crear">
+                                    Crear Receta
                                 </a>
-                            }
+                            </li>
+                        }
 
-                       
+                    </ul>
+
+                    <!-- BUSCADOR -->
+                    <form class="d-flex mx-lg-3 my-2 my-lg-0"
+                          role="search"
+                          asp-controller="Recetas"
+                          asp-action="Index"
+                          method="get">
+
+                        <div class="input-group">
+
+                            <input type="text"
+                                   name="termino"
+                                   class="form-control"
+                                   placeholder="Buscá una receta"
+                                   aria-label="Buscar receta" />
+
+                            <button class="btn btn-light"
+                                    type="submit">
+                                Buscar
+                            </button>
+
                         </div>
+                    </form>
+
+                    <!-- USUARIO -->
+                    <div class="d-flex align-items-center gap-2">
+
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <!-- MENÚ DESPLEGABLE -->
+                            <div class="dropdown">
+
+                                <button class="btn btn-outline-light dropdown-toggle"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+
+                                    @User.Identity.Name
+
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end">
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Usuarios"
+                                           asp-action="MiPerfil">
+                                            Mi Perfil
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Usuarios"
+                                           asp-action="EditarPerfil">
+                                            Editar Perfil
+                                        </a>
+                                    </li>
+
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <li>
+                                            <hr class="dropdown-divider" />
+                                        </li>
+
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="Usuarios"
+                                               asp-action="Index">
+                                                Administrar Usuarios
+                                            </a>
+                                        </li>
+                                    }
+
+                                </ul>
+                            </div>
+
+                            <!-- CERRAR SESIÓN -->
+                            <form asp-controller="Login"
+                                  asp-action="Logout"
+                                  method="post">
+
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-outline-light text-nowrap">
+                                    Cerrar Sesión
+                                </button>
+
+                            </form>
+                        }
+                        else
+                        {
+                            <!-- INICIAR SESIÓN -->
+                            <a class="btn btn-outline-light text-nowrap"
+                               asp-controller="Login"
+                               asp-action="Login">
+                                Iniciar Sesión
+                            </a>
+                        }
+
                     </div>
+
                 </div>
-            </nav>
-        </header>
-        <div class="container">
-            <main role="main" class="pb-3">
-                @RenderBody()
-            </main>
-        </div>
-
-        <footer class="border-top footer text-muted">
-            <div class="container">
-                &copy; 2026 - SaborNet - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
             </div>
-        </footer>
-        <script src="~/lib/jquery/dist/jquery.min.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
-        @await RenderSectionAsync("Scripts", required: false)
-    </body>
+        </nav>
+    </header>
 
+    <!-- CONTENIDO DE CADA VISTA -->
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - SaborNet -
+            <a asp-controller="Home"
+               asp-action="Privacy">
+                Privacy
+            </a>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
 </html>
