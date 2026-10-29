@@ -1,87 +1,187 @@
+// INGREDIENTES
+
+
+
 using Microsoft.AspNetCore.Mvc;
 using backend.Models;
-using backend.data;
+using SaborNet.Service;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend.Controllers;
 
 public class IngredientesController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly IngredienteService _servicio;
 
-    public IngredientesController(AppDbContext context)
+    public IngredientesController(IngredienteService servicio)
     {
-        _context = context;
+        _servicio = servicio;
     }
 
+    public class IngredienteDto
+    {
+        [Required(ErrorMessage = "Ingresá un nombre")]
+        [StringLength(100)]
+        public string nombre { get; set; } = "";
+
+        [Required(ErrorMessage = "Ingresá una unidad")]
+        [StringLength(50)]
+        public string unidadDeMedida { get; set; } = "";
+    }
+
+    // GET: /Ingredientes
     [HttpGet]
     public IActionResult Index()
     {
-        var ingredientes = _context.Ingredientes.ToList();
-        return View(ingredientes);
-    }
-
-    [HttpGet]
-    public IActionResult Crear()
-    {
-        
         return View();
-
     }
 
-    [HttpPost]
-    public IActionResult Crear(Ingrediente ingrediente)
-    {
-        if (ModelState.IsValid)
-        {
-            _context.Ingredientes.Add(ingrediente);
-            _context.SaveChanges();
-            return RedirectToAction("Index");
-        }
-        return View(ingrediente);
-    }
-
+    // GET: /Ingredientes/Listar?pagina=1&buscar=harina
     [HttpGet]
-    public IActionResult Editar(int id)
+    public async Task<IActionResult> Listar(
+        int pagina = 1,
+        string? buscar = null)
     {
-        var ingrediente = _context.Ingredientes.Find(id);
-        if (ingrediente == null)
+        const int tamano = 10;
+
+        pagina = Math.Max(1, pagina);
+
+        var (items, total) =
+            await _servicio.ListarPaginado(
+                pagina, tamano, buscar);
+
+        return Ok(new
         {
-            return NotFound();
-        }
-        return View(ingrediente);
+            items = items.Select(i => new
+            {
+                id = i.ID,
+                nombre = i.nombre,
+                unidadDeMedida = i.unidadDeMedida
+            }),
+            pagina,
+            total,
+            totalPaginas = (int)Math.Ceiling(
+                (double)total / tamano)
+        });
     }
-    [HttpPost]
-    public IActionResult Editar(Ingrediente ingrediente)
-    {
-        if (ModelState.IsValid)
-        {
-            _context.Ingredientes.Update(ingrediente);
-            _context.SaveChanges();
-            return RedirectToAction("Index");
-        }
-        return View(ingrediente);
-    }
+
+    // GET: /Ingredientes/Obtener/5
     [HttpGet]
-    public IActionResult Eliminar(int id)
+    public async Task<IActionResult> Obtener(int id)
     {
-        var ingrediente = _context.Ingredientes.Find(id);
+        var ingrediente = await _servicio.BuscarUno(id);
+
         if (ingrediente == null)
+            return NotFound(new
+            {
+                mensaje = "Ingrediente no encontrado"
+            });
+
+        return Ok(new
         {
-            return NotFound();
-        }
-        return View(ingrediente);
+            id = ingrediente.ID,
+            nombre = ingrediente.nombre,
+            unidadDeMedida = ingrediente.unidadDeMedida
+        });
     }
-    
-    [HttpPost, ActionName("Eliminar")]
-    public IActionResult EliminarConfirmado(int id)
+
+    // POST: /Ingredientes/Crear
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Crear(
+        [FromBody] IngredienteDto datos)
     {
-        var ingrediente = _context.Ingredientes.Find(id);
-        if (ingrediente == null)
+        if (datos == null)
+            return BadRequest(new { mensaje = "Datos inválidos" });
+
+        datos.nombre = datos.nombre?.Trim() ?? "";
+        datos.unidadDeMedida =
+            datos.unidadDeMedida?.Trim() ?? "";
+
+        ModelState.Clear();
+
+        if (!TryValidateModel(datos))
+            return BadRequest(ModelState);
+
+        var ingrediente = new Ingrediente
         {
+            nombre = datos.nombre,
+            unidadDeMedida = datos.unidadDeMedida
+        };
+
+        await _servicio.Alta(ingrediente);
+
+        return Ok(new
+        {
+            mensaje = "Ingrediente creado correctamente",
+            id = ingrediente.ID
+        });
+    }
+
+    // POST: /Ingredientes/Editar/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Editar(
+        int id,
+        [FromBody] IngredienteDto datos)
+    {
+        if (datos == null)
+            return BadRequest(new { mensaje = "Datos inválidos" });
+
+        datos.nombre = datos.nombre?.Trim() ?? "";
+        datos.unidadDeMedida =
+            datos.unidadDeMedida?.Trim() ?? "";
+
+        ModelState.Clear();
+
+        if (!TryValidateModel(datos))
+            return BadRequest(ModelState);
+
+        bool actualizado = await _servicio.Actualizar(
+            id, datos.nombre, datos.unidadDeMedida);
+
+        if (!actualizado)
+            return NotFound(new
+            {
+                mensaje = "Ingrediente no encontrado"
+            });
+
+        return Ok(new
+        {
+            mensaje = "Ingrediente actualizado correctamente"
+        });
+    }
+
+    // POST: /Ingredientes/Eliminar/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Eliminar(int id)
+    {
+        var ingrediente = await _servicio.BuscarUno(id);
+
+        if (ingrediente == null)
+            return NotFound(new
+            {
+                mensaje = "Ingrediente no encontrado"
+            });
+
+        if (await _servicio.EstaEnUso(id))
+            return Conflict(new
+            {
+                mensaje = "No se puede eliminar porque " +
+                          "el ingrediente está asociado a recetas"
+            });
+
+        bool eliminado = await _servicio.Baja(id);
+
+        if (!eliminado)
             return NotFound();
-        }
-        _context.Ingredientes.Remove(ingrediente);
-        _context.SaveChanges();
-        return RedirectToAction("Index");
+
+        return Ok(new
+        {
+            mensaje = "Ingrediente eliminado correctamente"
+        });
     }
 }
+
+
