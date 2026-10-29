@@ -80,10 +80,6 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
 
-                    b.Property<string>("ImagenDeIngrediente")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("nombre")
                         .IsRequired()
                         .HasColumnType("text");
