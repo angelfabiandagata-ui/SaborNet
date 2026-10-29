@@ -17,7 +17,7 @@ public class IngredientesController : Controller
     public IActionResult Index()
     {
         var ingredientes = _context.Ingredientes.ToList();
-        return Ok(ingredientes);
+        return View(ingredientes);
     }
 
     [HttpGet]

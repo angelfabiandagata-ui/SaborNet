@@ -1,0 +1,60 @@
+@model backend.Models.RecetaFormularioViewModel
+
+@{
+    ViewData["Title"] = "Crear Receta";
+}
+
+<div class="container d-flex justify-content-center align-items-center py-5">
+    <div class="card shadow-sm p-4 w-100" style="max-width: 600px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border: 1px solid #54494B;">
+
+        <h3 class="text-center mb-4">Crear Nueva Receta</h3>
+
+        <form asp-action="Crear" method="post" enctype="multipart/form-data">
+
+            <div class="mb-3">
+                <label asp-for="Titulo" class="form-label">Título</label>
+                <input asp-for="Titulo" class="form-control" placeholder="Ej. Milanesas a la napolitana" required />
+                <span asp-validation-for="Titulo" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Descripcion" class="form-label">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="2" placeholder="Breve descripción del plato..." required></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Instrucciones" class="form-label">Instrucciones</label>
+                <textarea asp-for="Instrucciones" class="form-control" rows="4" placeholder="Paso a paso de la preparación..." required></textarea>
+                <span asp-validation-for="Instrucciones" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="TiempoMinutos" class="form-label">Tiempo de Preparación (minutos)</label>
+                <input asp-for="TiempoMinutos" class="form-control" type="number" placeholder="Ej. 45" required />
+                <span asp-validation-for="TiempoMinutos" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Foto" class="form-label">Foto Principal</label>
+                <input asp-for="Foto" class="form-control" type="file" accept="image/*" required />
+                <span asp-validation-for="Foto" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CategoriaID" class="form-label">Categoría</label>
+                <select asp-for="CategoriaID" class="form-control" asp-items="@(new SelectList(ViewBag.Categorias, "ID", "Nombre"))" required>
+                    <option value="">-- Seleccione una categoría --</option>
+                </select>
+                <span asp-validation-for="CategoriaID" class="text-danger small"></span>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <button type="submit" class="btn boton-marron w-100 mt-2">
+                Guardar Receta
+            </button>
+
+        </form>
+    </div>
+</div>
