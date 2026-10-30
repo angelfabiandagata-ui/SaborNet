@@ -66,7 +66,7 @@ public class UsuarioService : ServicioBase<Usuario>
     {
         var usuario = await BuscarPorEmail(email);
 
-        if (usuario == null)
+        if (usuario == null || !usuario.Activo)
             return null;
 
         var resultado = _passwordHasher.VerifyHashedPassword(

@@ -34,11 +34,22 @@ public class LoginController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var usuario = await _db.Usuarios.SingleOrDefaultAsync(u => u.Email == model.Email);
+        var email = model.Email.Trim().ToLowerInvariant();
+
+        var usuario = await _db.Usuarios
+            .SingleOrDefaultAsync(u => u.Email.ToLower() == email);
+
         if (usuario is null ||
-            _passwordHasher.VerifyHashedPassword(usuario, usuario.Password, model.Password) == PasswordVerificationResult.Failed)
+            !usuario.Activo ||
+            _passwordHasher.VerifyHashedPassword(
+                usuario,
+                usuario.Password,
+                model.Password) == PasswordVerificationResult.Failed)
         {
-            ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
+            ModelState.AddModelError(
+                string.Empty,
+                "Email o contraseña incorrectos, o cuenta deshabilitada.");
+
             return View(model);
         }
 
@@ -57,7 +68,7 @@ public class LoginController : Controller
         return RedirectToAction("Index", "Home");
     }
 
-    
+
 
     public IActionResult Registrarse()
     {
@@ -90,10 +101,10 @@ public class LoginController : Controller
         await _db.SaveChangesAsync();
 
         return RedirectToAction(nameof(Login));
-    
+
     }
 
-        // POST: /Login/Logout
+    // POST: /Login/Logout
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -105,7 +116,7 @@ public class LoginController : Controller
         return RedirectToAction("Index", "Home");
     }
 
-      // GET: /Cuenta/AccesoDenegado
+    // GET: /Cuenta/AccesoDenegado
     [AllowAnonymous]
     [HttpGet]
     public IActionResult AccesoDenegado()

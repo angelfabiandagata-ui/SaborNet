@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using backend.data;
 using backend.Hubs;
 using backend.Models;
@@ -16,15 +17,80 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options => {
-        // Ruta para usuarios no autenticados (Login)
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme) //Permitir/rechazar autenticación basada en cookies 
+    .AddCookie(options =>
+    {
         options.LoginPath = "/Login/Login";
-        
-        // ESTA ES LA LÍNEA PARA EL ACCESO DENEGADO
-        options.AccessDeniedPath = "/Acceso/AccesoDenegado"; 
-    });
+        options.AccessDeniedPath = "/Acceso/AccesoDenegado";
 
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var idTexto = context.Principal?
+                .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(idTexto, out int usuarioId))
+            {
+                context.RejectPrincipal();
+
+                await context.HttpContext.SignOutAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices
+                .GetRequiredService<AppDbContext>();
+
+            var usuario = await db.Usuarios
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == usuarioId);
+
+            if (usuario == null || !usuario.Activo)
+            {
+                context.RejectPrincipal();
+
+                await context.HttpContext.SignOutAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+
+                return;
+            }
+
+            var rolActual = context.Principal?
+                .FindFirst(ClaimTypes.Role)?.Value;
+
+            if (rolActual != usuario.rol.ToString())
+            {
+                var claims = new[]
+                {
+                    new Claim(
+                        ClaimTypes.NameIdentifier,
+                        usuario.Id.ToString()),
+
+                    new Claim(
+                        ClaimTypes.Name,
+                        usuario.Nombre),
+
+                    new Claim(
+                        ClaimTypes.Email,
+                        usuario.Email),
+
+                    new Claim(
+                        ClaimTypes.Role,
+                        usuario.rol.ToString())
+                };
+
+                var identidad = new ClaimsIdentity(
+                    claims,
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+
+                context.ReplacePrincipal(
+                    new ClaimsPrincipal(identidad));
+
+                context.ShouldRenew = true;
+            }
+        };
+    });
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();

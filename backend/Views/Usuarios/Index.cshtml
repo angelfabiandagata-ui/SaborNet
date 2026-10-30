@@ -147,8 +147,7 @@
                                 <form asp-controller="Usuarios"
                                       asp-action="CambiarEstado"
                                       method="post"
-                                      class="d-inline"
-                                      onsubmit="return confirm('¿Confirmás el cambio de estado de este usuario?');">
+                                      class="d-inline">
 
                                     @Html.AntiForgeryToken()
 
