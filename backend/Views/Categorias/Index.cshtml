@@ -1,0 +1,132 @@
+@model IEnumerable<backend.Models.Categoria>
+
+@{
+    ViewData["Title"] = "Administrar Categorías";
+}
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">
+        Administración de Categorías
+    </h2>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Mensaje"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Agregar categoría</h5>
+
+            <form asp-controller="Categorias"
+                  asp-action="Crear"
+                  method="post"
+                  class="d-flex gap-2 flex-wrap">
+
+                @Html.AntiForgeryToken()
+
+                <input type="text"
+                       name="nombre"
+                       class="form-control"
+                       placeholder="Nombre de la categoría"
+                       minlength="3"
+                       maxlength="50"
+                       required
+                       style="max-width:350px;" />
+
+                <button type="submit"
+                        class="btn boton-marron">
+                    Agregar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var categoria in Model)
+                {
+                    <tr>
+                        <td>@categoria.Nombre</td>
+
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap">
+
+                                <form asp-controller="Categorias"
+                                      asp-action="Editar"
+                                      method="post"
+                                      class="d-flex gap-2 flex-wrap">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@categoria.ID" />
+
+                                    <input type="text"
+                                           name="nombre"
+                                           value="@categoria.Nombre"
+                                           class="form-control form-control-sm"
+                                           minlength="3"
+                                           maxlength="50"
+                                           required
+                                           style="width:180px;" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm boton-marron">
+                                        Guardar
+                                    </button>
+                                </form>
+
+                                <form asp-controller="Categorias"
+                                      asp-action="Eliminar"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@categoria.ID" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+                                        Quitar
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Todavía no hay categorías registradas.
+        </div>
+    }
+
+</div>

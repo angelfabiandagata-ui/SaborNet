@@ -1,18 +1,16 @@
-// CATEGORIAS
-
-
-using Microsoft.AspNetCore.Mvc;
 using backend.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SaborNet.Service;
 
 namespace backend.Controllers;
 
+[Authorize(Roles = "Administrador")]
 public class CategoriasController : Controller
 {
     private readonly CategoriaService _categoriaService;
 
-    public CategoriasController(
-        CategoriaService categoriaService)
+    public CategoriasController(CategoriaService categoriaService)
     {
         _categoriaService = categoriaService;
     }
@@ -21,114 +19,89 @@ public class CategoriasController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var categorias =
-            await _categoriaService.ListarOrdenadas();
-
+        var categorias = await _categoriaService.ListarOrdenadas();
         return View(categorias);
-    }
-
-    // GET: /Categorias/Crear
-    [HttpGet]
-    public IActionResult Crear()
-    {
-        return View(new Categoria());
     }
 
     // POST: /Categorias/Crear
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Crear(
-        [Bind("Nombre")] Categoria categoria)
+    public async Task<IActionResult> Crear(string nombre)
     {
-        categoria.Nombre = categoria.Nombre.Trim();
+        nombre = nombre?.Trim() ?? "";
 
-        if (string.IsNullOrWhiteSpace(categoria.Nombre))
+        if (nombre.Length < 3 || nombre.Length > 50)
         {
-            ModelState.AddModelError(
-                nameof(Categoria.Nombre),
-                "El nombre es obligatorio.");
+            TempData["Error"] =
+                "El nombre debe tener entre 3 y 50 caracteres.";
+
+            return RedirectToAction(nameof(Index));
         }
 
-        if (!ModelState.IsValid)
-            return View(categoria);
+        if (await _categoriaService.ExisteNombre(nombre))
+        {
+            TempData["Error"] =
+                "Ya existe una categoría con ese nombre.";
 
-        await _categoriaService.Alta(categoria);
+            return RedirectToAction(nameof(Index));
+        }
 
-        TempData["Mensaje"] =
-            "Categoría creada correctamente.";
+        await _categoriaService.Alta(new Categoria
+        {
+            Nombre = nombre
+        });
+
+        TempData["Mensaje"] = "Categoría creada correctamente.";
 
         return RedirectToAction(nameof(Index));
     }
 
-    // GET: /Categorias/Editar/5
-    [HttpGet]
-    public async Task<IActionResult> Editar(int id)
+    // POST: /Categorias/Editar
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Editar(int id, string nombre)
     {
-        var categoria =
-            await _categoriaService.BuscarUno(id);
+        nombre = nombre?.Trim() ?? "";
+
+        if (nombre.Length < 3 || nombre.Length > 50)
+        {
+            TempData["Error"] =
+                "El nombre debe tener entre 3 y 50 caracteres.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        var categoria = await _categoriaService.BuscarUno(id);
 
         if (categoria == null)
             return NotFound();
 
-        return View(categoria);
-    }
-
-    // POST: /Categorias/Editar/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Editar(
-        int id,
-        [Bind("Nombre")] Categoria categoria)
-    {
-        categoria.Nombre = categoria.Nombre.Trim();
-
-        if (string.IsNullOrWhiteSpace(categoria.Nombre))
+        if (await _categoriaService.ExisteNombre(nombre, id))
         {
-            ModelState.AddModelError(
-                nameof(Categoria.Nombre),
-                "El nombre es obligatorio.");
-        }
+            TempData["Error"] =
+                "Ya existe otra categoría con ese nombre.";
 
-        if (!ModelState.IsValid)
-        {
-            categoria.ID = id;
-            return View(categoria);
+            return RedirectToAction(nameof(Index));
         }
 
         bool actualizado =
-            await _categoriaService.ActualizarNombre(
-                id, categoria.Nombre);
+            await _categoriaService.ActualizarNombre(id, nombre);
 
         if (!actualizado)
             return NotFound();
 
         TempData["Mensaje"] =
-            "Categoría modificada correctamente.";
+            "Categoría actualizada correctamente.";
 
         return RedirectToAction(nameof(Index));
     }
 
-    // GET: /Categorias/Eliminar/5
-    [HttpGet]
+    // POST: /Categorias/Eliminar
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Eliminar(int id)
     {
-        var categoria =
-            await _categoriaService.BuscarUno(id);
-
-        if (categoria == null)
-            return NotFound();
-
-        return View(categoria);
-    }
-
-    // POST: /Categorias/Eliminar/5
-    [HttpPost]
-    [ActionName("Eliminar")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EliminarConfirmado(int id)
-    {
-        var categoria =
-            await _categoriaService.BuscarUno(id);
+        var categoria = await _categoriaService.BuscarUno(id);
 
         if (categoria == null)
             return NotFound();
@@ -136,14 +109,13 @@ public class CategoriasController : Controller
         if (await _categoriaService.TieneRecetas(id))
         {
             TempData["Error"] =
-                "No se puede eliminar una categoría " +
-                "que tiene recetas asociadas.";
+                "No se puede eliminar esta categoría porque " +
+                "tiene recetas asociadas.";
 
             return RedirectToAction(nameof(Index));
         }
 
-        bool eliminado =
-            await _categoriaService.Baja(id);
+        bool eliminado = await _categoriaService.Baja(id);
 
         if (!eliminado)
             return NotFound();
@@ -154,5 +126,3 @@ public class CategoriasController : Controller
         return RedirectToAction(nameof(Index));
     }
 }
-
-
