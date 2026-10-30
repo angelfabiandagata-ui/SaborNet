@@ -4,99 +4,407 @@
     ViewData["Title"] = "Crear Receta";
 }
 
-<head>
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css" />
 
-    <!-- CSS de Tom Select -->
+<style>
+    .ts-wrapper .option,
+    .ts-wrapper .item {
+        display: flex;
+        align-items: center;
+    }
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css">
-
-    
-    <style>
-        /* Estilo mínimo para acomodar las imágenes */
-        .ts-wrapper .option, .ts-wrapper .item { display: flex; align-items: center; }
-        .ts-img { width: 30px; height: 30px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
-    </style>
-</head>
+    .ts-img {
+        width: 30px;
+        height: 30px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-right: 10px;
+    }
+</style>
 
 <div class="container d-flex justify-content-center align-items-center py-5">
-    <div class="card shadow-sm p-4 w-100" style="max-width: 600px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border: 1px solid #54494B;">
+    <div class="card shadow-sm p-4 w-100"
+         style="max-width: 600px; border: 1px solid #54494B;">
 
         <h3 class="text-center mb-4">Crear Nueva Receta</h3>
 
-        <form asp-action="Crear" method="post" enctype="multipart/form-data">
+        <form asp-controller="Recetas"
+              asp-action="Crear"
+              method="post"
+              enctype="multipart/form-data"
+              id="formCrearReceta">
+
+            @Html.AntiForgeryToken()
 
             <div class="mb-3">
                 <label asp-for="Titulo" class="form-label">Título</label>
-                <input asp-for="Titulo" class="form-control" placeholder="Ej. Milanesas a la napolitana" required />
-                <span asp-validation-for="Titulo" class="text-danger small"></span>
+                <input asp-for="Titulo"
+                       class="form-control"
+                       placeholder="Ej. Milanesas a la napolitana"
+                       required />
+                <span asp-validation-for="Titulo"
+                      class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Descripcion" class="form-label">Descripción</label>
-                <textarea asp-for="Descripcion" class="form-control" rows="2" placeholder="Breve descripción del plato..." required></textarea>
-                <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                <label asp-for="Descripcion"
+                       class="form-label">Descripción</label>
+                <textarea asp-for="Descripcion"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Breve descripción del plato..."
+                          required></textarea>
+                <span asp-validation-for="Descripcion"
+                      class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Instrucciones" class="form-label">Instrucciones</label>
-                <textarea asp-for="Instrucciones" class="form-control" rows="4" placeholder="Paso a paso de la preparación..." required></textarea>
-                <span asp-validation-for="Instrucciones" class="text-danger small"></span>
+                <label asp-for="Instrucciones"
+                       class="form-label">Instrucciones</label>
+                <textarea asp-for="Instrucciones"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Paso a paso de la preparación..."
+                          required></textarea>
+                <span asp-validation-for="Instrucciones"
+                      class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="TiempoMinutos" class="form-label">Tiempo de Preparación (minutos)</label>
-                <input asp-for="TiempoMinutos" class="form-control" type="number" placeholder="Ej. 45" required />
-                <span asp-validation-for="TiempoMinutos" class="text-danger small"></span>
+                <label asp-for="TiempoMinutos"
+                       class="form-label">
+                    Tiempo de preparación (minutos)
+                </label>
+                <input asp-for="TiempoMinutos"
+                       class="form-control"
+                       type="number"
+                       min="1"
+                       required />
+                <span asp-validation-for="TiempoMinutos"
+                      class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Foto" class="form-label">Foto Principal</label>
-                <input asp-for="Foto" class="form-control" type="file" accept="image/*" required />
-                <span asp-validation-for="Foto" class="text-danger small"></span>
+                <label asp-for="Foto" class="form-label">
+                    Foto principal
+                </label>
+                <input asp-for="Foto"
+                       class="form-control"
+                       type="file"
+                       accept=".jpg,.jpeg,.png"
+                       required />
+                <span asp-validation-for="Foto"
+                      class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="CategoriaID" class="form-label">Categoría</label>
-                <select asp-for="CategoriaID" class="form-control" asp-items="@(new SelectList(ViewBag.Categorias, "ID", "Nombre"))" required>
+                <label asp-for="CategoriaID"
+                       class="form-label">Categoría</label>
+                <select asp-for="CategoriaID"
+                        class="form-select"
+                        asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                            ViewBag.Categorias, "ID", "Nombre"))"
+                        required>
                     <option value="">-- Seleccione una categoría --</option>
                 </select>
-                <span asp-validation-for="CategoriaID" class="text-danger small"></span>
+                <span asp-validation-for="CategoriaID"
+                      class="text-danger small"></span>
             </div>
 
+            <hr class="my-4" />
+
+            <h5 class="mb-3">Ingredientes</h5>
+
             <div class="mb-3">
-                <label for="miBuscador" class="form-label">Selecciona un Ingrediente:</label>
-                <select id="miBuscador" class="form-control" style="width: 100%;">
+                <label for="miBuscador" class="form-label">
+                    Buscar ingrediente
+                </label>
+
+                <select id="miBuscador" class="form-select">
                     <option value="">Buscar ingrediente...</option>
+
                     @foreach (var ing in Model.Ingredientes_Basicos)
                     {
-                        <option value="@ing.ID" data-src="/imagenes/@ing.ImagenDeIngrediente">@ing.nombre</option>
+                        <option value="@ing.ID"
+                                data-src="@Url.Content("~/imagenes/" + ing.ImagenDeIngrediente)"
+                                data-unidad="@ing.unidadDeMedida">
+                            @ing.nombre
+                        </option>
                     }
                 </select>
             </div>
 
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="mb-3">
+                <label for="cantidadIngrediente"
+                       class="form-label">Cantidad</label>
 
-          
+                <div class="input-group">
+                    <input type="number"
+                           id="cantidadIngrediente"
+                           class="form-control"
+                           min="0.01"
+                           step="any"
+                           placeholder="Ej. 500" />
 
-            <button type="submit" class="btn boton-marron w-100 mt-2">
-                Guardar Receta
+                    <span class="input-group-text"
+                          id="unidadIngrediente">
+                        Unidad
+                    </span>
+                </div>
+
+                <div id="errorIngrediente"
+                     class="text-danger small mt-1"></div>
+            </div>
+
+            <button type="button"
+                    id="btnAgregarIngrediente"
+                    class="btn boton-marron w-100 mb-3">
+                Agregar ingrediente
             </button>
 
+            <h6>Ingredientes agregados</h6>
+
+            <div id="listaIngredientes"
+                 class="list-group mb-3">
+
+                @for (int i = 0; i < Model.Ingredientes.Count; i++)
+                {
+                    var ingrediente = Model.Ingredientes[i];
+
+                    var basico = Model.Ingredientes_Basicos
+                        .FirstOrDefault(x =>
+                            x.ID == ingrediente.IngredienteID);
+
+                    <div class="list-group-item d-flex
+                                justify-content-between
+                                align-items-center gap-2"
+                         data-ingrediente-id="@ingrediente.IngredienteID">
+
+                        <div>
+                            <strong>
+                                @(basico?.nombre ?? ingrediente.Nombre
+                                  ?? "Ingrediente")
+                            </strong>
+
+                            <span class="text-muted">
+                                — @ingrediente.Cantidad
+                                @(basico?.unidadDeMedida ?? "")
+                            </span>
+                        </div>
+
+                        <div class="datos-ingrediente">
+                            <input type="hidden"
+                                   name="Ingredientes[@i].IngredienteID"
+                                   value="@ingrediente.IngredienteID" />
+
+                            <input type="hidden"
+                                   name="Ingredientes[@i].Cantidad"
+                                   value="@ingrediente.Cantidad.ToString(
+                                       System.Globalization.CultureInfo.InvariantCulture)" />
+                        </div>
+
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger btn-quitar">
+                            Quitar
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <span asp-validation-for="Ingredientes"
+                  class="text-danger small d-block mb-3"></span>
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
+
+            <button type="submit"
+                    class="btn boton-marron w-100 mt-2">
+                Guardar Receta
+            </button>
         </form>
     </div>
 </div>
 
-
-<!-- JS oficial de Tom Select -->
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 
-
 <script>
-    // Inicialización ultralimpia: Tom Select mapea 'data-src' automáticamente a 'data.src'
-    new TomSelect('#miBuscador', {
+document.addEventListener("DOMContentLoaded", function () {
+
+    const buscador = document.getElementById("miBuscador");
+    const cantidad = document.getElementById("cantidadIngrediente");
+    const unidad = document.getElementById("unidadIngrediente");
+    const lista = document.getElementById("listaIngredientes");
+    const error = document.getElementById("errorIngrediente");
+    const botonAgregar = document.getElementById("btnAgregarIngrediente");
+    const formulario = document.getElementById("formCrearReceta");
+
+    const tomSelect = new TomSelect(buscador, {
+        maxItems: 1,
+        create: false,
+        placeholder: "Buscar ingrediente...",
+
         render: {
-            option: (data, escape) => `<div><img src="${escape(data.src)}" class="ts-img">${escape(data.text)}</div>`,
-            item: (data, escape) => `<div><img src="${escape(data.src)}" class="ts-img">${escape(data.text)}</div>`
+            option: function (data, escape) {
+                const imagen = data.src
+                    ? `<img src="${escape(data.src)}"
+                            class="ts-img"
+                            alt="">`
+                    : "";
+
+                return `<div>${imagen}${escape(data.text)}</div>`;
+            },
+
+            item: function (data, escape) {
+                const imagen = data.src
+                    ? `<img src="${escape(data.src)}"
+                            class="ts-img"
+                            alt="">`
+                    : "";
+
+                return `<div>${imagen}${escape(data.text)}</div>`;
+            }
+        },
+
+        onChange: function (valor) {
+            const opcion = buscador.querySelector(
+                `option[value="${valor}"]`
+            );
+
+            unidad.textContent =
+                opcion?.dataset.unidad || "Unidad";
+
+            error.textContent = "";
         }
     });
+
+    function reindexarIngredientes() {
+        const filas = lista.querySelectorAll(
+            "[data-ingrediente-id]"
+        );
+
+        filas.forEach(function (fila, indice) {
+            const inputs = fila.querySelectorAll(
+                ".datos-ingrediente input"
+            );
+
+            inputs[0].name =
+                `Ingredientes[${indice}].IngredienteID`;
+
+            inputs[1].name =
+                `Ingredientes[${indice}].Cantidad`;
+        });
+    }
+
+    function agregarIngrediente() {
+        error.textContent = "";
+
+        const id = tomSelect.getValue();
+        const valorCantidad = Number(cantidad.value);
+
+        if (!id) {
+            error.textContent =
+                "Seleccioná un ingrediente.";
+            return;
+        }
+
+        if (!Number.isFinite(valorCantidad) ||
+            valorCantidad <= 0) {
+            error.textContent =
+                "Ingresá una cantidad mayor a cero.";
+            return;
+        }
+
+        const repetido = Array.from(
+            lista.querySelectorAll("[data-ingrediente-id]")
+        ).some(fila => fila.dataset.ingredienteId === id);
+
+        if (repetido) {
+            error.textContent =
+                "Este ingrediente ya está agregado.";
+            return;
+        }
+
+        const opcion = buscador.querySelector(
+            `option[value="${id}"]`
+        );
+
+        const nombre = opcion?.textContent.trim() || "Ingrediente";
+        const nombreUnidad = opcion?.dataset.unidad || "";
+
+        const fila = document.createElement("div");
+        fila.className =
+            "list-group-item d-flex justify-content-between " +
+            "align-items-center gap-2";
+
+        fila.dataset.ingredienteId = id;
+
+        const descripcion = document.createElement("div");
+
+        const titulo = document.createElement("strong");
+        titulo.textContent = nombre;
+
+        const detalle = document.createElement("span");
+        detalle.className = "text-muted";
+        detalle.textContent =
+            ` — ${valorCantidad} ${nombreUnidad}`;
+
+        descripcion.append(titulo, detalle);
+
+        const datos = document.createElement("div");
+        datos.className = "datos-ingrediente";
+
+        const inputId = document.createElement("input");
+        inputId.type = "hidden";
+        inputId.value = id;
+
+        const inputCantidad = document.createElement("input");
+        inputCantidad.type = "hidden";
+        inputCantidad.value = String(valorCantidad);
+
+        datos.append(inputId, inputCantidad);
+
+        const quitar = document.createElement("button");
+        quitar.type = "button";
+        quitar.className =
+            "btn btn-sm btn-outline-danger btn-quitar";
+        quitar.textContent = "Quitar";
+
+        fila.append(descripcion, datos, quitar);
+        lista.appendChild(fila);
+
+        reindexarIngredientes();
+
+        tomSelect.clear();
+        cantidad.value = "";
+        unidad.textContent = "Unidad";
+    }
+
+    botonAgregar.addEventListener(
+        "click",
+        agregarIngrediente
+    );
+
+    lista.addEventListener("click", function (evento) {
+        const boton = evento.target.closest(".btn-quitar");
+
+        if (!boton) return;
+
+        boton.closest("[data-ingrediente-id]").remove();
+        reindexarIngredientes();
+    });
+
+    formulario.addEventListener("submit", function (evento) {
+        if (lista.querySelectorAll(
+            "[data-ingrediente-id]"
+        ).length === 0) {
+            evento.preventDefault();
+
+            error.textContent =
+                "Agregá al menos un ingrediente a la receta.";
+        }
+    });
+
+    reindexarIngredientes();
+});
 </script>

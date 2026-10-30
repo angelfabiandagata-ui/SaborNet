@@ -136,6 +136,9 @@ public async Task<IActionResult> Crear()
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
 
+            modelo.Ingredientes_Basicos =
+                await _Iservicio.RetornarIngredientesAlfabeticamente();
+
             return View(modelo);
         }
 

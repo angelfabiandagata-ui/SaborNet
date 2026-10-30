@@ -4,24 +4,48 @@
     ViewData["Title"] = "Recetas";
 }
 
-<h2 class="text-center">Recetas</h2>
-
 <div class="container mt-4">
-    <div class="row">
+
+    <h2 class="text-center mb-4">Recetas</h2>
+
+    <div class="row g-4">
+
         @foreach (var receta in Model)
         {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <img src="@Url.Content($"~/images/{receta.FotoPrincipal}")" class="card-img-top" alt="@receta.Titulo" />
-                    <div class="card-body">
-                        <h5 class="card-title">@receta.Titulo</h5>
-                        <p class="card-text">@receta.Descripcion</p>
-                        <a href="@Url.Action("Details", "Receta", new { id = receta.ID })" class="btn btn-primary">Ver Detalles</a>
+            <div class="col-md-4">
+
+                <div class="card h-100 shadow-sm" style="border: 1px solid #54494B; overflow: hidden;">
+
+                    <img src="@receta.FotoPrincipal" class="card-img-top" alt="@receta.Titulo"
+                         style="height: 220px; object-fit: cover;" />
+                    <div class="card-body d-flex flex-column">
+
+                        <h5 class="card-title">
+                            @receta.Titulo
+                        </h5>
+
+                        <p class="card-text">
+                            @receta.Descripcion
+                        </p>
+
+                        <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@receta.ID"
+                           class="btn boton-marron mt-auto">
+                            Ver Detalles
+                        </a>
+
                     </div>
                 </div>
+
             </div>
         }
 
     </div>
-</div>
 
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            Todavía no hay recetas publicadas.
+        </div>
+    }
+
+</div>

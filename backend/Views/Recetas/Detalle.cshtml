@@ -1,0 +1,138 @@
+@model backend.Models.Receta
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = Model.Titulo;
+
+    var ingredientes = ViewBag.Ingredientes
+        as List<backend.Models.RecetaIngrediente>
+        ?? new List<backend.Models.RecetaIngrediente>();
+
+    var miId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    bool puedeModificar =
+        User.Identity?.IsAuthenticated == true &&
+        (miId == Model.UsuarioID.ToString() ||
+         User.IsInRole("Administrador"));
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <a asp-controller="Recetas"
+               asp-action="Index"
+               class="btn btn-outline-secondary mb-4">
+                ← Volver a recetas
+            </a>
+
+            <h1 class="text-center fw-bold color-marron mb-3">
+                @Model.Titulo
+            </h1>
+
+            <p class="text-center text-muted mb-4">
+                Por @Model.Usuario.Nombre
+            </p>
+
+            <img src="@Model.FotoPrincipal"
+                 alt="@Model.Titulo"
+                 class="img-fluid rounded shadow-sm w-100 mb-4"
+                 style="max-height: 450px; object-fit: cover;" />
+
+            <div class="d-flex justify-content-center
+                        gap-3 flex-wrap mb-4">
+
+                <span class="badge bg-secondary fs-6">
+                    @Model.Categoria.Nombre
+                </span>
+
+                <span class="badge bg-secondary fs-6">
+                    ⏱ @Model.TiempoMinutos minutos
+                </span>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="color-marron">Descripción</h4>
+                    <p class="mb-0">@Model.Descripcion</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+
+                    <h4 class="color-marron mb-3">
+                        Ingredientes
+                    </h4>
+
+                    @if (ingredientes.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+
+                            @foreach (var item in ingredientes)
+                            {
+                                <li class="list-group-item
+                                           d-flex justify-content-between
+                                           align-items-center">
+
+                                    <span>
+                                        @item.Ingrediente.nombre
+                                    </span>
+
+                                    <strong>
+                                        @item.Cantidad
+                                        @item.Ingrediente.unidadDeMedida
+                                    </strong>
+
+                                </li>
+                            }
+
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">
+                            Esta receta no tiene ingredientes registrados.
+                        </p>
+                    }
+
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+
+                    <h4 class="color-marron mb-3">
+                        Preparación
+                    </h4>
+
+                    <p style="white-space: pre-line;">@Model.Instrucciones</p>
+
+                </div>
+            </div>
+
+            @if (puedeModificar)
+            {
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a asp-controller="Recetas"
+                       asp-action="Editar"
+                       asp-route-id="@Model.ID"
+                       class="btn boton-marron">
+                        Editar receta
+                    </a>
+
+                    <a asp-controller="Recetas"
+                       asp-action="Eliminar"
+                       asp-route-id="@Model.ID"
+                       class="btn btn-outline-danger">
+                        Eliminar receta
+                    </a>
+
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

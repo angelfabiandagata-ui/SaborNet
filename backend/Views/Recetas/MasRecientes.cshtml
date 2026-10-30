@@ -4,38 +4,109 @@
     ViewData["Title"] = "Recetas Recientes";
 }
 
+<style>
+    .tarjeta-receta {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tarjeta-receta:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .tarjeta-receta img {
+        height: 220px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .tarjeta-receta .card-title {
+        color: #54494B;
+    }
+
+    .enlace-receta {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
+    }
+
+    .enlace-receta:hover {
+        color: inherit;
+    }
+</style>
+
 <div class="container py-5">
 
-    <h1 class="text-center fw-bold color-marron">
+    <h1 class="text-center fw-bold color-marron mb-3">
         RECETAS RECIENTES
     </h1>
-    <hr>
 
+    <hr class="mb-4" />
 
-    <p class="text-center text-muted">
-        Descubri las recetas mas modernas en la comunidad
+    <p class="text-center text-muted mb-4">
+        Descubrí las recetas más recientes de nuestra comunidad.
     </p>
 
+    @if (Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
 
+            @foreach (var receta in Model)
+            {
+                <div class="col">
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                    <a asp-controller="Recetas"
+                       asp-action="Detalle"
+                       asp-route-id="@receta.ID"
+                       class="enlace-receta">
 
-        @foreach (var receta in Model)
-        {
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <img src="@receta.FotoPrincipal" class="card-img-top" alt="@receta.Titulo"
-                         style="height: 200px; object-fit: cover;" />
+                        <div class="card tarjeta-receta h-100 shadow-sm">
 
-                    <div class="card-body text-center">
-                        <h5 class="card-title fw-semibold mb-0">
-                            @receta.Titulo
-                        </h5>
-                    </div>
+                            @if (!string.IsNullOrWhiteSpace(receta.FotoPrincipal))
+                            {
+                                <img src="@receta.FotoPrincipal"
+                                     class="card-img-top"
+                                     alt="@receta.Titulo"
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center
+                                            justify-content-center bg-light"
+                                     style="height: 220px;">
+                                    <span class="text-muted">
+                                        Sin imagen
+                                    </span>
+                                </div>
+                            }
+
+                            <div class="card-body text-center">
+
+                                <h5 class="card-title fw-semibold mb-0">
+                                    @receta.Titulo
+                                </h5>
+
+                            </div>
+
+                        </div>
+
+                    </a>
+
                 </div>
-            </div>
-        }
+            }
 
-    </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center mt-4">
+            Todavía no hay recetas publicadas.
+            ¡Sé el primero en compartir una!
+        </div>
+    }
 
-</div>
+</div>  

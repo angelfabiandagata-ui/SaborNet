@@ -64,3 +64,9 @@ CREATE TABLE IF NOT EXISTS "comentarios" (
 
 ALTER TABLE "Usuarios"
 ADD COLUMN "Activo" BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE "RecetaIngredientes"
+RENAME COLUMN "IngredienteId" TO "IngredienteID";
+
+ALTER TABLE "RecetaIngredientes"
+RENAME COLUMN "RecetaId" TO "RecetaID";
