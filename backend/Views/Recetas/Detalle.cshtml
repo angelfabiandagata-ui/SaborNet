@@ -16,6 +16,9 @@
          User.IsInRole("Administrador"));
 }
 
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css" />
+
 <div class="container py-5">
 
     <div class="row justify-content-center">
@@ -43,18 +46,18 @@
             <div class="d-flex justify-content-center
                         gap-3 flex-wrap mb-4">
 
-                <span class="badge bg-secondary fs-6">
+                <span class="badge bg-secondary fs-6"> Categoria:
                     @Model.Categoria.Nombre
                 </span>
 
                 <span class="badge bg-secondary fs-6">
-                    ⏱ @Model.TiempoMinutos minutos
+                    <i class="fa-regular fa-clock "></i> @Model.TiempoMinutos min.
                 </span>
             </div>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h4 class="color-marron">Descripción</h4>
+                    <h4 class="color-marron">Descripción:</h4>
                     <p class="mb-0">@Model.Descripcion</p>
                 </div>
             </div>
@@ -63,7 +66,7 @@
                 <div class="card-body">
 
                     <h4 class="color-marron mb-3">
-                        Ingredientes
+                        Ingredientes:
                     </h4>
 
                     @if (ingredientes.Any())
@@ -77,6 +80,7 @@
                                            align-items-center">
 
                                     <span>
+                                        <img src="/imagenes/@item.Ingrediente.ImagenDeIngrediente" alt="@item.Ingrediente.nombre" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; " class="me-2 border border-2px" />
                                         @item.Ingrediente.nombre
                                     </span>
 
@@ -104,7 +108,7 @@
                 <div class="card-body">
 
                     <h4 class="color-marron mb-3">
-                        Preparación
+                        Preparación:
                     </h4>
 
                     <p style="white-space: pre-line;">@Model.Instrucciones</p>
@@ -136,3 +140,6 @@
         </div>
     </div>
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>

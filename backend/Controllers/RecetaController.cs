@@ -209,7 +209,8 @@ public async Task<IActionResult> Crear()
                 {
                     IngredienteID = i.IngredienteID,
                     Cantidad = i.Cantidad
-                }).ToList()
+                }).ToList(),
+            Ingredientes_Basicos = await _Iservicio.RetornarIngredientesAlfabeticamente()
         };
 
         ViewBag.Categorias =
@@ -242,6 +243,8 @@ public async Task<IActionResult> Crear()
             modelo.FotoActual = recetaActual.FotoPrincipal;
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
+
+                
 
             return View(modelo);
         }

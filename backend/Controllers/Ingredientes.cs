@@ -147,40 +147,82 @@ public class IngredientesController : Controller
         TempData["Mensaje"] = "Ingrediente creado correctamente";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpGet]
+public async Task<IActionResult> Editar(int id)
+{
+    var ingrediente = await _servicio.BuscarUno(id);
+
+    if (ingrediente == null)
+        return NotFound();
+
+    return View(ingrediente);
+}
+
     // POST: /Ingredientes/Editar/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Editar(
-        int id,
-        [FromBody] IngredienteDto datos)
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Editar(
+    int id,
+    string nombre,
+    string unidadDeMedida,
+    IFormFile? imagenNueva,
+    [FromServices] IWebHostEnvironment entorno)
+{
+    var ingredienteActual = await _servicio.BuscarUno(id);
+    if (ingredienteActual == null)
+        return NotFound();
+
+    nombre = nombre?.Trim() ?? "";
+    unidadDeMedida = unidadDeMedida?.Trim() ?? "";
+
+    if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(unidadDeMedida))
     {
-        if (datos == null)
-            return BadRequest(new { mensaje = "Datos inválidos" });
-
-        datos.nombre = datos.nombre?.Trim() ?? "";
-        datos.unidadDeMedida =
-            datos.unidadDeMedida?.Trim() ?? "";
-
-        ModelState.Clear();
-
-        if (!TryValidateModel(datos))
-            return BadRequest(ModelState);
-
-        bool actualizado = await _servicio.Actualizar(
-            id, datos.nombre, datos.unidadDeMedida);
-
-        if (!actualizado)
-            return NotFound(new
-            {
-                mensaje = "Ingrediente no encontrado"
-            });
-
-        return Ok(new
-        {
-            mensaje = "Ingrediente actualizado correctamente"
-        });
+        ModelState.AddModelError("", "Completá todos los campos obligatorios.");
+        return View(ingredienteActual);
     }
 
+    string? rutaImagen = ingredienteActual.ImagenDeIngrediente;
+
+    if (imagenNueva != null && imagenNueva.Length > 0)
+    {
+        string webRootPath = entorno.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        string carpeta = Path.Combine(webRootPath, "imagenes");
+
+        if (!Directory.Exists(carpeta))
+        {
+            Directory.CreateDirectory(carpeta);
+        }
+
+        string extension = Path.GetExtension(imagenNueva.FileName).ToLowerInvariant();
+        string nombreArchivo = $"{Guid.NewGuid():N}{extension}";
+        string rutaCompleta = Path.Combine(carpeta, nombreArchivo);
+
+        using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+        {
+            await imagenNueva.CopyToAsync(stream);
+        }
+
+        if (!string.IsNullOrEmpty(ingredienteActual.ImagenDeIngrediente))
+        {
+            string rutaVieja = Path.Combine(carpeta, ingredienteActual.ImagenDeIngrediente);
+            if (System.IO.File.Exists(rutaVieja))
+                System.IO.File.Delete(rutaVieja);
+        }
+
+        rutaImagen = nombreArchivo;
+    }
+
+    bool actualizado = await _servicio.Actualizar(id, nombre, unidadDeMedida, rutaImagen);
+
+    if (!actualizado)
+        return NotFound();
+
+    TempData["Mensaje"] = "Ingrediente actualizado correctamente";
+    return RedirectToAction(nameof(Index));
+}
+
+    
     // POST: /Ingredientes/Eliminar/5
     [HttpPost]
     [ValidateAntiForgeryToken]

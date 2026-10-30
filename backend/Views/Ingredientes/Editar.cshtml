@@ -1,0 +1,54 @@
+@model backend.Models.Ingrediente
+
+@{
+    ViewData["Title"] = "Editar Ingrediente";
+}
+
+<div class="container d-flex justify-content-center align-items-center py-5">
+    <div class="card shadow-sm p-4 w-100"
+         style="max-width: 600px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border: 1px solid #54494B;">
+        <h3>Editar Ingrediente</h3>
+
+        <form asp-action="Editar" asp-route-id="@Model.ID" method="post" enctype="multipart/form-data">
+            
+            <div class="mb-3">
+                <label asp-for="nombre" class="form-label">Nombre del Ingrediente</label>
+                <input asp-for="nombre" class="form-control" placeholder="Ej. Huevo" required />
+                <span asp-validation-for="nombre" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="unidadDeMedida" class="form-label">Unidad de Medida</label>
+                <input asp-for="unidadDeMedida" class="form-control" placeholder="Ej. gramos, litros, unidades..." required />
+                <span asp-validation-for="unidadDeMedida" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Imagen Actual</label>
+                @if (!string.IsNullOrEmpty(Model.ImagenDeIngrediente))
+                {
+                    <div class="mb-2">
+                        <img src="/imagenes/@Model.ImagenDeIngrediente" alt="@Model.nombre" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;" />
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small">Sin imagen registrada</p>
+                }
+
+                <label for="imagenNueva" class="form-label mt-2">Cambiar Imagen (Opcional)</label>
+                <input type="file" name="imagenNueva" id="imagenNueva" class="form-control" accept="image/*" />
+            </div>
+
+            <button type="submit" class="btn boton-marron w-100 mt-2">
+                Guardar Cambios
+            </button>
+
+            <a asp-action="Index" asp-controller="Ingredientes"
+               class="btn btn-outline-secondary mt-3 w-100">
+                <i class="fa-solid fa-arrow-left"></i> Listado de Ingredientes
+            </a>
+
+        </form>
+    </div>
+</div>
