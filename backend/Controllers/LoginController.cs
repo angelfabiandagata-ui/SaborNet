@@ -77,31 +77,98 @@ public class LoginController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Registrarse(RegistroViewModel model)
+    public async Task<IActionResult> Registrarse(
+    RegistroViewModel model,
+    IFormFile? avatar)
     {
         if (!ModelState.IsValid)
             return View(model);
 
         if (await _db.Usuarios.AnyAsync(u => u.Email == model.Email))
         {
-            ModelState.AddModelError(nameof(model.Email), "Ya existe una cuenta con ese email.");
+            ModelState.AddModelError(
+                nameof(model.Email),
+                "Ya existe una cuenta con ese email.");
+
             return View(model);
+        }
+
+        string avatarUrl = "";
+
+        // Validar el archivo si el usuario seleccionó uno.
+        if (avatar != null && avatar.Length > 0)
+        {
+            const long tamanoMaximo = 2 * 1024 * 1024;
+
+            if (avatar.Length > tamanoMaximo)
+            {
+                ModelState.AddModelError(
+                    "avatar",
+                    "La imagen no puede superar los 2 MB.");
+
+                return View(model);
+            }
+
+            var extension = Path.GetExtension(
+                avatar.FileName).ToLowerInvariant();
+
+            var extensionesPermitidas = new[]
+            {
+            ".jpg", ".jpeg", ".png"
+        };
+
+            if (!extensionesPermitidas.Contains(extension))
+            {
+                ModelState.AddModelError(
+                    "avatar",
+                    "Solo se permiten imágenes JPG o PNG.");
+
+                return View(model);
+            }
+
+            // Guardar el archivo dentro de wwwroot.
+            var carpeta = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "imagenes",
+                "avatares");
+
+            Directory.CreateDirectory(carpeta);
+
+            var nombreArchivo =
+                $"{Guid.NewGuid():N}{extension}";
+
+            var rutaCompleta = Path.Combine(
+                carpeta,
+                nombreArchivo);
+
+            await using (var stream = new FileStream(
+                rutaCompleta,
+                FileMode.CreateNew))
+            {
+                await avatar.CopyToAsync(stream);
+            }
+
+            avatarUrl = $"/imagenes/avatares/{nombreArchivo}";
         }
 
         var usuario = new Usuario
         {
             Nombre = model.Nombre,
             Email = model.Email,
-            AvatarUrl = model.AvatarUrl ?? "",
+            AvatarUrl = avatarUrl,
             rol = Usuario.Rol.Usuario
         };
-        usuario.Password = _passwordHasher.HashPassword(usuario, model.Password);
+
+        usuario.Password = _passwordHasher.HashPassword(
+            usuario,
+            model.Password);
 
         _db.Usuarios.Add(usuario);
+
         await _db.SaveChangesAsync();
 
         return RedirectToAction(nameof(Login));
-
     }
 
     // POST: /Login/Logout

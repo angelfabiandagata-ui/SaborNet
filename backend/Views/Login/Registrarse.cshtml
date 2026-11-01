@@ -10,10 +10,9 @@
 
         <h3 class="text-center mb-4">Crear cuenta</h3>
 
-        <form method="post" asp-action="Registrarse">
+        <form method="post" asp-action="Registrarse" enctype="multipart/form-data">
 
-            <div asp-validation-summary="ModelOnly"
-                 class="text-danger mb-3"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="mb-3">
                 <label asp-for="Nombre" class="form-label">
@@ -59,15 +58,18 @@
                       class="text-danger small"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="AvatarUrl" class="form-label">
-                    Avatar (opcional)
-                </label>
-                <input asp-for="AvatarUrl"
-                       class="form-control"
-                       placeholder="URL del avatar" />
-                <span asp-validation-for="AvatarUrl"
-                      class="text-danger small"></span>
+              <div class="mb-3">
+                <label class="form-label">Avatar</label>
+                <input type="file"
+                       name="avatar"
+                       accept=".jpg,.jpeg,.png"
+                       class="form-control" />
+                <span class="text-danger">
+                    @Html.ValidationMessage("avatar")
+                </span>
+                <small class="text-muted">
+                    JPG o PNG. Máximo 2 MB.
+                </small>
             </div>
 
             <button type="submit" class="btn boton-marron w-100">
