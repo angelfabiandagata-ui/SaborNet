@@ -109,6 +109,9 @@ builder.Services.AddScoped<RecetaService>();
 builder.Services.AddScoped<IngredienteService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<ComentarioService>();
+builder.Services.AddScoped<ValoracionComentarioService>();
+builder.Services.AddScoped<ValoracionRecetaService>();
 
 var app = builder.Build();
 

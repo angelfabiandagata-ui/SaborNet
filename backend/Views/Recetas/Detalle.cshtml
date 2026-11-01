@@ -8,6 +8,10 @@
         as List<backend.Models.RecetaIngrediente>
         ?? new List<backend.Models.RecetaIngrediente>();
 
+    var comentarios = ViewBag.Comentarios
+        as List<backend.Models.Comentario>
+        ?? new List<backend.Models.Comentario>();
+
     var miId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
     bool puedeModificar =
@@ -137,9 +141,68 @@
 
             <hr class="my-5" />
 
+            <h3>Valorar receta</h3>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="ValoracionReceta"
+                      asp-action="Valorar"
+                      method="post"
+                      class="d-flex gap-2 mb-4">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="recetaId" value="@Model.ID" />
+                    <button class="btn btn-success" name="valoracion" value="true">
+                        Me gusta
+                    </button>
+                    <button class="btn btn-outline-danger" name="valoracion" value="false">
+                        No me gusta
+                    </button>
+                </form>
+            }
+            else
+            {
+                <p><a asp-controller="Login" asp-action="Login">Iniciá sesión</a> para valorar.</p>
+            }
+
             <div class="row justify-content-center">
                 <div class="col-lg-9">
                     <h3 class="color-marron mb-4">Comentarios</h3>
+
+                    @foreach (var comentario in comentarios)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <p class="mb-1">@comentario.comentario</p>
+                                <small class="text-muted">
+                                    @comentario.Usuario.Nombre -
+                                    @comentario.fechaCreacion.ToString("g")
+                                </small>
+
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <form asp-controller="ValoracionComentario"
+                                          asp-action="Valorar"
+                                          method="post"
+                                          class="d-flex gap-2 mt-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="comentarioId"
+                                               value="@comentario.ID" />
+                                        <button class="btn btn-sm btn-success"
+                                                name="valoracion"
+                                                value="true">
+                                            Positivo
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                name="valoracion"
+                                                value="false">
+                                            Negativo
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
 
                     @if (User.Identity?.IsAuthenticated == true)
                     {
@@ -159,7 +222,7 @@
                     }
                     else
                     {
-                        <p class="text-muted mb-4"><a asp-controller="Cuentas" asp-action="Login">Iniciá sesión</a> para
+                        <p class="text-muted mb-4"><a asp-controller="Login" asp-action="Login">Iniciá sesión</a> para
                             dejar tu comentario.</p>
                         }
 

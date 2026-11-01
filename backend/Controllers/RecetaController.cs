@@ -13,16 +13,19 @@ public class RecetasController : Controller
 {
     private readonly RecetaService _servicio;
     private readonly IngredienteService _Iservicio;
+    private readonly ComentarioService _comentarioServicio;
     private readonly IWebHostEnvironment _entorno;
 
     public RecetasController(
         RecetaService servicio,
         IngredienteService Iservicio,
+        ComentarioService comentarioServicio,
         IWebHostEnvironment entorno)
     {
         _servicio = servicio;
         _entorno = entorno;
         _Iservicio = Iservicio;
+        _comentarioServicio = comentarioServicio;
     }
 
 
@@ -80,6 +83,8 @@ public class RecetasController : Controller
 
         ViewBag.Ingredientes =
             await _servicio.ObtenerIngredientes(id);
+        ViewBag.Comentarios =
+            await _comentarioServicio.ListarPorReceta(id);
 
         return View(receta);
     }

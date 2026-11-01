@@ -16,6 +16,9 @@ public class AppDbContext : DbContext
 
     public DbSet<Comentario> Comentarios { get; set; }
 
+    public DbSet<ValoracionComentario> ValoracionComentarios { get; set; }
+    public DbSet<ValoracionReceta> ValoracionRecetas { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,5 +43,13 @@ public class AppDbContext : DbContext
             .HasOne(ri => ri.Ingrediente)
             .WithMany(i => i.RecetaIngredientes)
             .HasForeignKey(ri => ri.IngredienteID);
+
+        modelBuilder.Entity<ValoracionComentario>()
+            .HasIndex(v => new { v.ComentarioID, v.UsuarioID })
+            .IsUnique();
+
+        modelBuilder.Entity<ValoracionReceta>()
+            .HasIndex(v => new { v.RecetaID, v.UsuarioID })
+            .IsUnique();
     }
 }

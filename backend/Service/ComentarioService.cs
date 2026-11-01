@@ -58,6 +58,16 @@ public class ComentarioService : ServicioBase<Comentario>
         return (comentarios, total);
     }
 
+    public Task<List<Comentario>> ListarPorReceta(int recetaId)
+    {
+        return _db.Comentarios
+            .AsNoTracking()
+            .Include(c => c.Usuario)
+            .Where(c => c.RecetaID == recetaId)
+            .OrderByDescending(c => c.fechaCreacion)
+            .ToListAsync();
+    }
+
     internal async Task<Comentario?> ObtenerComentario(int id)
     {
         return await _db.Comentarios
