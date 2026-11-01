@@ -6,7 +6,9 @@ public class Usuario
 {
   public enum Rol{
   Usuario,
-  Administrador }
+  Administrador,
+  Chef,
+  Cocinero_Amateur }
     public int Id { get; set; }
 
     [Required(ErrorMessage ="El nombre no puede estar vacio")]
