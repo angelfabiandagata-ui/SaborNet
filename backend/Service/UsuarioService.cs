@@ -116,7 +116,8 @@ public class UsuarioService : ServicioBase<Usuario>
         int id,
         string nombre,
         string email,
-        string avatarUrl)
+        byte[]? avatarDatos,
+        string? avatarTipo)
     {
         var usuario = await Db.Usuarios.FindAsync(id);
 
@@ -125,7 +126,12 @@ public class UsuarioService : ServicioBase<Usuario>
 
         usuario.Nombre = nombre.Trim();
         usuario.Email = email.Trim().ToLowerInvariant();
-        usuario.AvatarUrl = avatarUrl;
+        if (avatarDatos != null)
+        {
+            usuario.AvatarUrl = "";
+            usuario.AvatarDatos = avatarDatos;
+            usuario.AvatarTipo = avatarTipo;
+        }
 
         await Db.SaveChangesAsync();
 

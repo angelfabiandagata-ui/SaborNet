@@ -21,7 +21,16 @@
             <div asp-validation-summary="All"
                  class="text-danger mb-3"></div>
 
-            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+            @if (Model.AvatarDatos != null)
+            {
+                <div class="text-center mb-4">
+                    <img src="/Imagenes/Avatar/@Model.Id"
+                         alt="Avatar actual"
+                         class="rounded-circle"
+                         style="width: 120px; height: 120px; object-fit: cover;" />
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(Model.AvatarUrl))
             {
                 <div class="text-center mb-4">
                     <img src="@Model.AvatarUrl"

@@ -12,14 +12,10 @@ namespace backend.Controllers;
 public class UsuariosController : Controller
 {
     private readonly UsuarioService _servicio;
-    private readonly IWebHostEnvironment _entorno;
 
-    public UsuariosController(
-        UsuarioService servicio,
-        IWebHostEnvironment entorno)
+    public UsuariosController(UsuarioService servicio)
     {
         _servicio = servicio;
-        _entorno = entorno;
     }
 
     // GET: /Usuarios/MiPerfil
@@ -186,72 +182,27 @@ public class UsuariosController : Controller
             return View(datos);
         }
 
-        // IMPORTANTE:
-        // Guardamos la ruta anterior ANTES de actualizar
-        // la entidad en Entity Framework.
-        string? avatarAnterior = usuario.AvatarUrl;
-        string? nuevoAvatar = null;
+        byte[]? avatarDatos = null;
+        string? avatarTipo = null;
 
-        try
+        if (avatar != null)
         {
-            // GUARDAR NUEVO AVATAR
-            if (avatar != null)
-            {
-                nuevoAvatar = await GuardarAvatar(avatar);
-            }
+            using var memoria = new MemoryStream();
+            await avatar.CopyToAsync(memoria);
+            avatarDatos = memoria.ToArray();
 
-            // ACTUALIZAR BASE DE DATOS
-            bool actualizado =
-                await _servicio.ActualizarPerfil(
-                    usuario.Id,
-                    nombre,
-                    email,
-                    nuevoAvatar ?? avatarAnterior ?? "");
-
-            if (!actualizado)
-            {
-                if (nuevoAvatar != null)
-                    EliminarAvatar(nuevoAvatar);
-
-                return NotFound();
-            }
-
-            // BORRAR AVATAR ANTERIOR
-            if (nuevoAvatar != null &&
-                !string.Equals(
-                    avatarAnterior,
-                    nuevoAvatar,
-                    StringComparison.Ordinal))
-            {
-                EliminarAvatar(avatarAnterior);
-            }
-
-            TempData["Mensaje"] =
-                "Perfil actualizado correctamente.";
-
-            return RedirectToAction(nameof(MiPerfil));
+            string extension = Path.GetExtension(avatar.FileName).ToLowerInvariant();
+            avatarTipo = extension == ".png" ? "image/png" : "image/jpeg";
         }
-        catch
-        {
-            // Si falla la operación, intentamos
-            // limpiar el archivo nuevo.
-            // La limpieza no debe ocultar
-            // la excepción original.
-            if (nuevoAvatar != null)
-            {
-                try
-                {
-                    EliminarAvatar(nuevoAvatar);
-                }
-                catch
-                {
-                    // Registrar el error de limpieza
-                    // si se agrega ILogger.
-                }
-            }
 
-            throw;
-        }
+        bool actualizado = await _servicio.ActualizarPerfil(
+            usuario.Id, nombre, email, avatarDatos, avatarTipo);
+
+        if (!actualizado)
+            return NotFound();
+
+        TempData["Mensaje"] = "Perfil actualizado correctamente.";
+        return RedirectToAction(nameof(MiPerfil));
     }
 
     // GET: /Usuarios
@@ -414,86 +365,4 @@ public async Task<IActionResult> CambiarEstado(int id, bool activo)
         return false;
     }
 
-    // GUARDAR AVATAR EN WWWROOT
-    private async Task<string> GuardarAvatar(
-        IFormFile archivo)
-    {
-        string webRoot = _entorno.WebRootPath
-            ?? Path.Combine(
-                _entorno.ContentRootPath,
-                "wwwroot");
-
-        string carpeta = Path.Combine(
-            webRoot,
-            "imagenes",
-            "avatares");
-
-        Directory.CreateDirectory(carpeta);
-
-        string extension = Path.GetExtension(
-            archivo.FileName).ToLowerInvariant();
-
-        string nombre =
-            $"{Guid.NewGuid():N}{extension}";
-
-        string ruta = Path.Combine(carpeta, nombre);
-
-        await using (var stream = new FileStream(
-            ruta, FileMode.CreateNew))
-        {
-            await archivo.CopyToAsync(stream);
-        }
-
-        // Verificar que el archivo se creó.
-        if (!System.IO.File.Exists(ruta))
-        {
-            throw new IOException(
-                "No se pudo guardar el avatar.");
-        }
-
-        Console.WriteLine(
-            $"Avatar guardado: {ruta}");
-
-        return $"/imagenes/avatares/{nombre}";
-    }
-
-    // ELIMINAR AVATAR ANTERIOR
-    private void EliminarAvatar(string? rutaRelativa)
-    {
-        if (string.IsNullOrWhiteSpace(rutaRelativa))
-            return;
-
-        const string prefijo =
-            "/imagenes/avatares/";
-
-        if (!rutaRelativa.StartsWith(
-            prefijo,
-            StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        string nombre =
-            rutaRelativa[prefijo.Length..];
-
-        // Evitar rutas fuera de la carpeta.
-        if (nombre != Path.GetFileName(nombre))
-            return;
-
-        string webRoot = _entorno.WebRootPath
-            ?? Path.Combine(
-                _entorno.ContentRootPath,
-                "wwwroot");
-
-        string ruta = Path.Combine(
-            webRoot,
-            "imagenes",
-            "avatares",
-            nombre);
-
-        if (System.IO.File.Exists(ruta))
-        {
-            System.IO.File.Delete(ruta);
-        }
-    }
 }

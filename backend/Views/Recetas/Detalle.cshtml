@@ -61,8 +61,16 @@
                 De: @Model.Usuario.Nombre
             </p>
 
-            <img src="@Model.FotoPrincipal" alt="@Model.Titulo" class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
-                 style="max-height: 650px; object-fit: cover;" />
+            @if (Model.FotoDatos != null)
+            {
+                <img src="/Imagenes/Receta/@Model.ID" alt="@Model.Titulo" class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
+                     style="max-height: 650px; object-fit: cover;" />
+            }
+            else if (!string.IsNullOrEmpty(Model.FotoPrincipal))
+            {
+                <img src="@Model.FotoPrincipal" alt="@Model.Titulo" class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
+                     style="max-height: 650px; object-fit: cover;" />
+            }
             <div class="d-flex justify-content-center
                 gap-3 flex-wrap mb-4">
 
@@ -100,10 +108,20 @@
                                     align-items-center">
 
                                     <span>
-                                        <img src="/imagenes/@item.Ingrediente.ImagenDeIngrediente"
-                                             alt="@item.Ingrediente.nombre"
-                                             style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; "
-                                             class="me-2 border border-2px" />
+                                        @if (item.Ingrediente.ImagenDatos != null)
+                                        {
+                                            <img src="/Imagenes/Ingrediente/@item.IngredienteID"
+                                                 alt="@item.Ingrediente.nombre"
+                                                 style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px;"
+                                                 class="me-2 border border-2px" />
+                                        }
+                                        else if (!string.IsNullOrEmpty(item.Ingrediente.ImagenDeIngrediente))
+                                        {
+                                            <img src="/imagenes/@item.Ingrediente.ImagenDeIngrediente"
+                                                 alt="@item.Ingrediente.nombre"
+                                                 style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px;"
+                                                 class="me-2 border border-2px" />
+                                        }
                                         @item.Ingrediente.nombre
                                     </span>
 
@@ -148,15 +166,21 @@
                 <form asp-controller="ValoracionReceta"
                       asp-action="Valorar"
                       method="post"
-                      class="d-flex gap-2 mb-4">
+                      class="mb-4">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="recetaId" value="@Model.ID" />
-                    <button class="btn btn-success" name="valoracion" value="true">
-                        Me gusta
-                    </button>
-                    <button class="btn btn-outline-danger" name="valoracion" value="false">
-                        No me gusta
-                    </button>
+                    <label for="puntajeReceta" class="form-label">
+                        ¿Cuánto te gustó? (1 a 5)
+                    </label>
+                    <select id="puntajeReceta" name="puntaje" class="form-select mb-2" required>
+                        <option value="">Elegí una puntuación</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                    <button type="submit" class="btn btn-success">Enviar puntuación</button>
                 </form>
             }
             else
@@ -167,6 +191,11 @@
             <div class="row justify-content-center">
                 <div class="col-lg-9">
                     <h3 class="color-marron mb-4">Comentarios</h3>
+
+                    @if (comentarios.Count == 0)
+                    {
+                        <p class="text-muted">Todavía no hay comentarios.</p>
+                    }
 
                     @foreach (var comentario in comentarios)
                     {
@@ -185,19 +214,9 @@
                                           method="post"
                                           class="d-flex gap-2 mt-2">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden"
-                                               name="comentarioId"
-                                               value="@comentario.ID" />
-                                        <button class="btn btn-sm btn-success"
-                                                name="valoracion"
-                                                value="true">
-                                            Positivo
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger"
-                                                name="valoracion"
-                                                value="false">
-                                            Negativo
-                                        </button>
+                                        <input type="hidden" name="comentarioId" value="@comentario.ID" />
+                                        <button class="btn btn-sm btn-success" name="valoracion" value="true">Positivo</button>
+                                        <button class="btn btn-sm btn-outline-danger" name="valoracion" value="false">Negativo</button>
                                     </form>
                                 }
                             </div>
@@ -207,16 +226,31 @@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <div class="card shadow-sm mb-4 p-3">
-                            <form id="formComentario">
-                                <input type="hidden" id="recetaId" value="@Model.ID" />
+                            <form asp-controller="Comentarios"
+                                  asp-action="Crear"
+                                  method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="RecetaID" value="@Model.ID" />
                     
                                 <div class="mb-3">
                                     <label for="textoComentario" class="form-label">Tu opinión</label>
-                                    <textarea id="textoComentario" class="form-control" rows="3"
+                                    <textarea name="comentario" id="textoComentario" class="form-control" rows="3"
                                               placeholder="Escribí tu comentario sobre la receta..." required></textarea>
                                 </div>
 
-                                <button type="submit" class="btn boton-marron">Publicar Comentario</button>
+                                <div class="mb-3">
+                                    <label for="calificacion" class="form-label">Calificación</label>
+                                    <select name="calificacion" id="calificacion" class="form-select" required>
+                                        <option value="">Elegí una calificación</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn boton-marron">Publicar comentario</button>
                             </form>
                         </div>
                     }
@@ -226,8 +260,6 @@
                             dejar tu comentario.</p>
                         }
 
-                        <div id="listaComentarios" class="d-flex flex-column gap-3">
-                        </div>
                     </div>
                 </div>
 

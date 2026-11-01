@@ -17,7 +17,7 @@ public class ValoracionRecetaController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Valorar(int recetaId, bool? valoracion)
+    public async Task<IActionResult> Valorar(int recetaId, int? puntaje)
     {
         string? idUsuario = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -26,13 +26,13 @@ public class ValoracionRecetaController : Controller
             return Challenge();
         }
 
-        if (valoracion == null)
+        if (puntaje == null || puntaje < 1 || puntaje > 5)
         {
-            return BadRequest("Elegí una valoración.");
+            return BadRequest("El puntaje debe ser de 1 a 5.");
         }
 
         bool guardado = await _servicio.GuardarValoracion(
-            recetaId, usuarioId, valoracion.Value);
+            recetaId, usuarioId, puntaje.Value);
 
         if (!guardado)
         {

@@ -93,7 +93,8 @@ public class LoginController : Controller
             return View(model);
         }
 
-        string avatarUrl = "";
+        byte[]? avatarDatos = null;
+        string? avatarTipo = null;
 
         // Validar el archivo si el usuario seleccionó uno.
         if (avatar != null && avatar.Length > 0)
@@ -126,37 +127,19 @@ public class LoginController : Controller
                 return View(model);
             }
 
-            // Guardar el archivo dentro de wwwroot.
-            var carpeta = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "imagenes",
-                "avatares");
-
-            Directory.CreateDirectory(carpeta);
-
-            var nombreArchivo =
-                $"{Guid.NewGuid():N}{extension}";
-
-            var rutaCompleta = Path.Combine(
-                carpeta,
-                nombreArchivo);
-
-            await using (var stream = new FileStream(
-                rutaCompleta,
-                FileMode.CreateNew))
-            {
-                await avatar.CopyToAsync(stream);
-            }
-
-            avatarUrl = $"/imagenes/avatares/{nombreArchivo}";
+            using var memoria = new MemoryStream();
+            await avatar.CopyToAsync(memoria);
+            avatarDatos = memoria.ToArray();
+            avatarTipo = extension == ".png" ? "image/png" : "image/jpeg";
         }
 
         var usuario = new Usuario
         {
             Nombre = model.Nombre,
             Email = model.Email,
-            AvatarUrl = avatarUrl,
+            AvatarUrl = "",
+            AvatarDatos = avatarDatos,
+            AvatarTipo = avatarTipo,
             rol = Usuario.Rol.Usuario
         };
 

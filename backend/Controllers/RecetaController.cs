@@ -14,16 +14,13 @@ public class RecetasController : Controller
     private readonly RecetaService _servicio;
     private readonly IngredienteService _Iservicio;
     private readonly ComentarioService _comentarioServicio;
-    private readonly IWebHostEnvironment _entorno;
 
     public RecetasController(
         RecetaService servicio,
         IngredienteService Iservicio,
-        ComentarioService comentarioServicio,
-        IWebHostEnvironment entorno)
+        ComentarioService comentarioServicio)
     {
         _servicio = servicio;
-        _entorno = entorno;
         _Iservicio = Iservicio;
         _comentarioServicio = comentarioServicio;
     }
@@ -147,41 +144,29 @@ public async Task<IActionResult> Crear()
             return View(modelo);
         }
 
-        string? rutaFoto = null;
+        var (fotoDatos, fotoTipo) = await LeerImagen(modelo.Foto!);
 
-        try
+        var receta = new Receta
         {
-            rutaFoto = await GuardarFoto(modelo.Foto!);
+            Titulo = modelo.Titulo.Trim(),
+            Descripcion = modelo.Descripcion.Trim(),
+            Instrucciones = modelo.Instrucciones.Trim(),
+            TiempoMinutos = modelo.TiempoMinutos,
+            CategoriaID = modelo.CategoriaID,
+            UsuarioID = usuarioId.Value,
+            FotoPrincipal = "",
+            FotoDatos = fotoDatos,
+            FotoTipo = fotoTipo
+        };
 
-            var receta = new Receta
-            {
-                Titulo = modelo.Titulo.Trim(),
-                Descripcion = modelo.Descripcion.Trim(),
-                Instrucciones = modelo.Instrucciones.Trim(),
-                TiempoMinutos = modelo.TiempoMinutos,
-                CategoriaID = modelo.CategoriaID,
-                UsuarioID = usuarioId.Value,
-                FotoPrincipal = rutaFoto
-            };
+        var ingredientes = modelo.Ingredientes
+            .Select(i => (i.IngredienteID, i.Cantidad));
 
-            var ingredientes = modelo.Ingredientes
-                .Select(i => (i.IngredienteID, i.Cantidad));
+        await _servicio.CrearConIngredientes(
+            receta, ingredientes);
 
-            await _servicio.CrearConIngredientes(
-                receta, ingredientes);
-
-            TempData["Mensaje"] =
-                "Receta creada correctamente.";
-
-            return RedirectToAction(nameof(Index));
-        }
-        catch
-        {
-            if (rutaFoto != null)
-                EliminarFoto(rutaFoto);
-
-            throw;
-        }
+        TempData["Mensaje"] = "Receta creada correctamente.";
+        return RedirectToAction(nameof(Index));
     }
 
     // GET: /Recetas/Editar/5
@@ -208,7 +193,9 @@ public async Task<IActionResult> Crear()
             Instrucciones = receta.Instrucciones,
             TiempoMinutos = receta.TiempoMinutos,
             CategoriaID = receta.CategoriaID,
-            FotoActual = receta.FotoPrincipal,
+            FotoActual = receta.FotoDatos != null
+                ? Url.Action("Receta", "Imagenes", new { id = receta.ID })
+                : receta.FotoPrincipal,
             Ingredientes = ingredientes.Select(i =>
                 new IngredienteFormularioViewModel
                 {
@@ -245,7 +232,9 @@ public async Task<IActionResult> Crear()
         if (!ModelState.IsValid)
         {
             modelo.ID = id;
-            modelo.FotoActual = recetaActual.FotoPrincipal;
+            modelo.FotoActual = recetaActual.FotoDatos != null
+                ? Url.Action("Receta", "Imagenes", new { id })
+                : recetaActual.FotoPrincipal;
 
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
@@ -256,56 +245,40 @@ public async Task<IActionResult> Crear()
             return View(modelo);
         }
 
-        string? nuevaFoto = null;
+        byte[]? nuevaFotoDatos = null;
+        string? nuevoFotoTipo = null;
 
-        // Guardamos la ruta anterior antes de modificar la receta
-        string fotoAnterior = recetaActual.FotoPrincipal;
-
-        try
+        if (modelo.Foto != null)
         {
-            if (modelo.Foto != null)
-                nuevaFoto = await GuardarFoto(modelo.Foto);
-
-            var datos = new Receta
-            {
-                Titulo = modelo.Titulo.Trim(),
-                Descripcion = modelo.Descripcion.Trim(),
-                Instrucciones = modelo.Instrucciones.Trim(),
-                TiempoMinutos = modelo.TiempoMinutos,
-                CategoriaID = modelo.CategoriaID,
-                FotoPrincipal =
-                    nuevaFoto ?? recetaActual.FotoPrincipal
-            };
-
-            var ingredientes = modelo.Ingredientes
-                .Select(i => (i.IngredienteID, i.Cantidad));
-
-            bool actualizado =
-                await _servicio.ActualizarConIngredientes(
-                    id, datos, ingredientes);
-
-            if (!actualizado)
-                return NotFound();
-
-            if (nuevaFoto != null &&
-    !string.Equals(nuevaFoto, fotoAnterior, StringComparison.Ordinal))
-            {
-                EliminarFoto(fotoAnterior);
-            }
-
-            TempData["Mensaje"] =
-                "Receta actualizada correctamente.";
-
-            return RedirectToAction(
-                nameof(Detalle), new { id });
+            var foto = await LeerImagen(modelo.Foto);
+            nuevaFotoDatos = foto.Datos;
+            nuevoFotoTipo = foto.Tipo;
         }
-        catch
+
+        var datos = new Receta
         {
-            if (nuevaFoto != null)
-                EliminarFoto(nuevaFoto);
+            Titulo = modelo.Titulo.Trim(),
+            Descripcion = modelo.Descripcion.Trim(),
+            Instrucciones = modelo.Instrucciones.Trim(),
+            TiempoMinutos = modelo.TiempoMinutos,
+            CategoriaID = modelo.CategoriaID,
+            FotoPrincipal = "",
+            FotoDatos = nuevaFotoDatos,
+            FotoTipo = nuevoFotoTipo
+        };
 
-            throw;
-        }
+        var ingredientes = modelo.Ingredientes
+            .Select(i => (i.IngredienteID, i.Cantidad));
+
+        bool actualizado =
+            await _servicio.ActualizarConIngredientes(
+                id, datos, ingredientes);
+
+        if (!actualizado)
+            return NotFound();
+
+        TempData["Mensaje"] = "Receta actualizada correctamente.";
+        return RedirectToAction(nameof(Detalle), new { id });
     }
 
     // GET: /Recetas/Eliminar/5
@@ -344,8 +317,6 @@ public async Task<IActionResult> Crear()
 
         if (!eliminado)
             return NotFound();
-
-        EliminarFoto(receta.FotoPrincipal);
 
         TempData["Mensaje"] =
             "Receta eliminada correctamente.";
@@ -451,49 +422,15 @@ public async Task<IActionResult> Crear()
         }
     }
 
-    private async Task<string> GuardarFoto(IFormFile archivo)
-{
-    var carpeta = Path.Combine(
-        _entorno.WebRootPath, "imagenes", "recetas");
-
-    Directory.CreateDirectory(carpeta);
-
-    var extension = Path.GetExtension(
-        archivo.FileName).ToLowerInvariant();
-
-    var nombre = $"{Guid.NewGuid():N}{extension}";
-    var ruta = Path.Combine(carpeta, nombre);
-
-
-    await using (var stream = new FileStream(
-        ruta, FileMode.CreateNew))
+    private static async Task<(byte[] Datos, string Tipo)> LeerImagen(
+        IFormFile archivo)
     {
-        await archivo.CopyToAsync(stream);
-    }
-    return $"/imagenes/recetas/{nombre}";
-}
+        using var memoria = new MemoryStream();
+        await archivo.CopyToAsync(memoria);
 
-    private void EliminarFoto(string? rutaRelativa)
-    {
-        if (string.IsNullOrWhiteSpace(rutaRelativa))
-            return;
+        string extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+        string tipo = extension == ".png" ? "image/png" : "image/jpeg";
 
-        const string prefijo = "/imagenes/recetas/";
-
-        if (!rutaRelativa.StartsWith(
-                prefijo, StringComparison.Ordinal))
-            return;
-
-        var nombre = rutaRelativa[prefijo.Length..];
-
-        if (nombre != Path.GetFileName(nombre))
-            return;
-
-        var ruta = Path.Combine(
-            _entorno.WebRootPath,
-            "imagenes", "recetas", nombre);
-
-        if (System.IO.File.Exists(ruta))
-            System.IO.File.Delete(ruta);
+        return (memoria.ToArray(), tipo);
     }
 }

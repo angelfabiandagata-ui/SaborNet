@@ -25,7 +25,7 @@
 
             <div class="mb-3">
                 <label asp-for="ImagenDeIngrediente" class="form-label">Imagen del Ingrediente</label>
-                <input asp-for="ImagenDeIngrediente" class="form-control" type="file" accept="image/*" required />
+                <input asp-for="ImagenDeIngrediente" class="form-control" type="file" accept=".jpg,.jpeg,.png" required />
                 <span asp-validation-for="ImagenDeIngrediente" class="text-danger small"></span>
             </div>
 

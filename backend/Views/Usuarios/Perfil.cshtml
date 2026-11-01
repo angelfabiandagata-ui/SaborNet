@@ -8,7 +8,14 @@
     <div class="card shadow-sm p-4 w-100 text-center"
          style="max-width: 450px; border: 1px solid #54494B;">
 
-        @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+        @if (Model.AvatarDatos != null)
+        {
+            <img src="/Imagenes/Avatar/@Model.Id"
+                 alt="Avatar"
+                 class="rounded-circle mx-auto mb-3"
+                 style="width: 130px; height: 130px; object-fit: cover;" />
+        }
+        else if (!string.IsNullOrEmpty(Model.AvatarUrl))
         {
             <img src="@Model.AvatarUrl"
                  alt="Avatar"

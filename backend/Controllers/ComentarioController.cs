@@ -47,7 +47,9 @@ public class ComentariosController : Controller
             fecha = c.fechaCreacion,
             usuarioId = c.UsuarioID,
             autor = c.Usuario.Nombre,
-            avatar = c.Usuario.AvatarUrl
+            avatar = c.Usuario.AvatarDatos != null
+                ? $"/Imagenes/Avatar/{c.UsuarioID}"
+                : c.Usuario.AvatarUrl
         });
 
         return Ok(new
@@ -83,31 +85,20 @@ public class ComentariosController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Crear(
-        [FromBody] ComentarioViewModel modelo)
+    public async Task<IActionResult> Crear(ComentarioViewModel modelo)
     {
         int? usuarioId = ObtenerUsuarioId();
 
         if (usuarioId == null)
             return Challenge();
 
-        if (modelo == null)
-            return BadRequest(new { mensaje = "Datos inválidos" });
-
         modelo.comentario = modelo.comentario?.Trim() ?? "";
 
-        ModelState.Clear();
-
-        if (!TryValidateModel(modelo))
+        if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         if (!await _servicio.ExisteReceta(modelo.RecetaID))
-        {
-            return NotFound(new
-            {
-                mensaje = "La receta no existe"
-            });
-        }
+            return NotFound();
 
         var comentario = new Comentario
         {
@@ -120,14 +111,8 @@ public class ComentariosController : Controller
 
         await _servicio.Alta(comentario);
 
-        await NotificarCambio(
-            comentario.RecetaID, "creado", comentario.ID);
-
-        return Ok(new
-        {
-            mensaje = "Comentario publicado correctamente",
-            id = comentario.ID
-        });
+        return RedirectToAction(
+            "Detalle", "Recetas", new { id = comentario.RecetaID });
     }
 
     // POST: /Comentarios/Editar/8

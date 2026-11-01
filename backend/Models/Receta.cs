@@ -22,6 +22,8 @@ public class Receta
 
     [DataType(DataType.ImageUrl)]
     public string FotoPrincipal { get; set; }="";
+    public byte[]? FotoDatos { get; set; }
+    public string? FotoTipo { get; set; }
 
     [DataType(DataType.DateTime)]
     public DateTime FechaDeLaReceta { get; set; } = DateTime.UtcNow;

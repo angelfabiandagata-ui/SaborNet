@@ -14,6 +14,8 @@ public class Ingrediente
 
     [Required(ErrorMessage = "El ingrediente debe tener una imagen")]
     public string ImagenDeIngrediente { get; set; } = ""; 
+    public byte[]? ImagenDatos { get; set; }
+    public string? ImagenTipo { get; set; }
 
     public ICollection<RecetaIngrediente> RecetaIngredientes { get; set; } = new List<RecetaIngrediente>();
 }

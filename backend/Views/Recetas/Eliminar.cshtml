@@ -23,7 +23,14 @@
                         <strong>Esta acción no se puede deshacer.</strong>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.FotoPrincipal))
+                    @if (Model.FotoDatos != null)
+                    {
+                        <img src="/Imagenes/Receta/@Model.ID"
+                             alt="@Model.Titulo"
+                             class="img-fluid rounded w-100 mb-4"
+                             style="max-height: 280px; object-fit: cover;" />
+                    }
+                    else if (!string.IsNullOrEmpty(Model.FotoPrincipal))
                     {
                         <img src="@Model.FotoPrincipal"
                              alt="@Model.Titulo"

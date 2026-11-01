@@ -31,9 +31,18 @@
                                 </a>
                             </div>
                             <div>
-                                <img src="/imagenes/@ingrediente.ImagenDeIngrediente" alt="@ingrediente.nombre"
-                                     style="width: 80px; height: 80px; object-position: center; object-fit: cover; border-radius: 8px; aling-items= center "
-                                     class="border border-2" />
+                                @if (ingrediente.ImagenDatos != null)
+                                {
+                                    <img src="/Imagenes/Ingrediente/@ingrediente.ID" alt="@ingrediente.nombre"
+                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
+                                         class="border border-2" />
+                                }
+                                else if (!string.IsNullOrEmpty(ingrediente.ImagenDeIngrediente))
+                                {
+                                    <img src="/imagenes/@ingrediente.ImagenDeIngrediente" alt="@ingrediente.nombre"
+                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
+                                         class="border border-2" />
+                                }
                             </div>
                         </div>
                     </div>

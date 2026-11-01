@@ -26,6 +26,8 @@ public class Usuario
 
     [DataType(DataType.ImageUrl)]
     public string? AvatarUrl  {get; set;}="";
+    public byte[]? AvatarDatos { get; set; }
+    public string? AvatarTipo { get; set; }
     [Required]
     public Rol rol {get; set;}
 

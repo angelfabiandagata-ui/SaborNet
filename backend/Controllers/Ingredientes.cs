@@ -99,8 +99,7 @@ public class IngredientesController : Controller
     public async Task<IActionResult> Crear(
      string nombre,
      string unidadDeMedida,
-     IFormFile? imagenDeIngrediente,
-     [FromServices] IWebHostEnvironment entorno)
+     IFormFile? imagenDeIngrediente)
     {
         nombre = nombre?.Trim() ?? "";
         unidadDeMedida = unidadDeMedida?.Trim() ?? "";
@@ -108,38 +107,53 @@ public class IngredientesController : Controller
         if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(unidadDeMedida))
         {
             ModelState.AddModelError("", "Completá todos los campos obligatorios.");
-            return View();
+            return View(new Ingrediente
+            {
+                nombre = nombre,
+                unidadDeMedida = unidadDeMedida
+            });
         }
 
-        string? rutaImagen = null;
-
-        if (imagenDeIngrediente != null && imagenDeIngrediente.Length > 0)
+        if (imagenDeIngrediente == null || imagenDeIngrediente.Length == 0)
         {
-            string webRootPath = entorno.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            string carpeta = Path.Combine(webRootPath, "imagenes");
-
-            if (!Directory.Exists(carpeta))
+            ModelState.AddModelError("imagenDeIngrediente", "Seleccioná una imagen.");
+            return View(new Ingrediente
             {
-                Directory.CreateDirectory(carpeta);
-            }
-
-            string extension = Path.GetExtension(imagenDeIngrediente.FileName).ToLowerInvariant();
-            string nombreArchivo = $"{Guid.NewGuid():N}{extension}";
-            string rutaCompleta = Path.Combine(carpeta, nombreArchivo);
-
-            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
-            {
-                await imagenDeIngrediente.CopyToAsync(stream);
-            }
-
-            rutaImagen = nombreArchivo;
+                nombre = nombre,
+                unidadDeMedida = unidadDeMedida
+            });
         }
+
+        if (imagenDeIngrediente.Length > 5 * 1024 * 1024)
+        {
+            ModelState.AddModelError("imagenDeIngrediente", "La imagen no puede superar 5 MB.");
+            return View(new Ingrediente
+            {
+                nombre = nombre,
+                unidadDeMedida = unidadDeMedida
+            });
+        }
+
+        var tipoImagen = ObtenerTipoImagen(imagenDeIngrediente);
+        if (tipoImagen == null)
+        {
+            ModelState.AddModelError("imagenDeIngrediente", "Usá una imagen JPG o PNG.");
+            return View(new Ingrediente
+            {
+                nombre = nombre,
+                unidadDeMedida = unidadDeMedida
+            });
+        }
+
+        byte[] imagenDatos = await LeerImagen(imagenDeIngrediente);
 
         var ingrediente = new Ingrediente
         {
             nombre = nombre,
             unidadDeMedida = unidadDeMedida,
-            ImagenDeIngrediente = rutaImagen ?? ""
+            ImagenDeIngrediente = "",
+            ImagenDatos = imagenDatos,
+            ImagenTipo = tipoImagen
         };
 
         await _servicio.Alta(ingrediente);
@@ -166,8 +180,7 @@ public async Task<IActionResult> Editar(
     int id,
     string nombre,
     string unidadDeMedida,
-    IFormFile? imagenNueva,
-    [FromServices] IWebHostEnvironment entorno)
+    IFormFile? imagenNueva)
 {
     var ingredienteActual = await _servicio.BuscarUno(id);
     if (ingredienteActual == null)
@@ -182,38 +195,33 @@ public async Task<IActionResult> Editar(
         return View(ingredienteActual);
     }
 
-    string? rutaImagen = ingredienteActual.ImagenDeIngrediente;
+    byte[]? imagenDatos = null;
+    string? tipoImagen = null;
 
     if (imagenNueva != null && imagenNueva.Length > 0)
     {
-        string webRootPath = entorno.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string carpeta = Path.Combine(webRootPath, "imagenes");
-
-        if (!Directory.Exists(carpeta))
+        if (imagenNueva.Length > 5 * 1024 * 1024)
         {
-            Directory.CreateDirectory(carpeta);
+            ModelState.AddModelError("imagenNueva", "La imagen no puede superar 5 MB.");
+            ingredienteActual.nombre = nombre;
+            ingredienteActual.unidadDeMedida = unidadDeMedida;
+            return View(ingredienteActual);
         }
 
-        string extension = Path.GetExtension(imagenNueva.FileName).ToLowerInvariant();
-        string nombreArchivo = $"{Guid.NewGuid():N}{extension}";
-        string rutaCompleta = Path.Combine(carpeta, nombreArchivo);
-
-        using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+        tipoImagen = ObtenerTipoImagen(imagenNueva);
+        if (tipoImagen == null)
         {
-            await imagenNueva.CopyToAsync(stream);
+            ModelState.AddModelError("imagenNueva", "Usá una imagen JPG o PNG.");
+            ingredienteActual.nombre = nombre;
+            ingredienteActual.unidadDeMedida = unidadDeMedida;
+            return View(ingredienteActual);
         }
 
-        if (!string.IsNullOrEmpty(ingredienteActual.ImagenDeIngrediente))
-        {
-            string rutaVieja = Path.Combine(carpeta, ingredienteActual.ImagenDeIngrediente);
-            if (System.IO.File.Exists(rutaVieja))
-                System.IO.File.Delete(rutaVieja);
-        }
-
-        rutaImagen = nombreArchivo;
+        imagenDatos = await LeerImagen(imagenNueva);
     }
 
-    bool actualizado = await _servicio.Actualizar(id, nombre, unidadDeMedida, rutaImagen);
+    bool actualizado = await _servicio.Actualizar(
+        id, nombre, unidadDeMedida, imagenDatos, tipoImagen);
 
     if (!actualizado)
         return NotFound();
@@ -253,6 +261,24 @@ public async Task<IActionResult> Editar(
             mensaje = "Ingrediente eliminado correctamente"
         });
     }
+
+    private static string? ObtenerTipoImagen(IFormFile imagen)
+    {
+        string extension = Path.GetExtension(imagen.FileName).ToLowerInvariant();
+
+        if (extension == ".jpg" || extension == ".jpeg")
+            return "image/jpeg";
+
+        if (extension == ".png")
+            return "image/png";
+
+        return null;
+    }
+
+    private static async Task<byte[]> LeerImagen(IFormFile imagen)
+    {
+        using var memoria = new MemoryStream();
+        await imagen.CopyToAsync(memoria);
+        return memoria.ToArray();
+    }
 }
-
-

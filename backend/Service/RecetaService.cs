@@ -149,7 +149,12 @@ public class RecetaService : ServicioBase<Receta>
         receta.Instrucciones = datos.Instrucciones;
         receta.TiempoMinutos = datos.TiempoMinutos;
         receta.CategoriaID = datos.CategoriaID;
-        receta.FotoPrincipal = datos.FotoPrincipal;
+        if (datos.FotoDatos != null)
+        {
+            receta.FotoPrincipal = "";
+            receta.FotoDatos = datos.FotoDatos;
+            receta.FotoTipo = datos.FotoTipo;
+        }
 
         // Obtener los ingredientes actuales.
         var existentes = receta.RecetaIngredientes.ToList();

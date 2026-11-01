@@ -14,7 +14,9 @@ public class IngredienteService : ServicioBase<Ingrediente>
         _db = db;
     }
 
-  internal async Task<bool> Actualizar(int id, string nombre, string unidadDeMedida, string? imagenDeIngrediente)
+  internal async Task<bool> Actualizar(
+      int id, string nombre, string unidadDeMedida,
+      byte[]? imagenDatos, string? imagenTipo)
 {
     var ingrediente = await _db.Ingredientes.FindAsync(id);
     if (ingrediente == null) return false;
@@ -22,9 +24,11 @@ public class IngredienteService : ServicioBase<Ingrediente>
     ingrediente.nombre = nombre;
     ingrediente.unidadDeMedida = unidadDeMedida;
 
-    if (!string.IsNullOrEmpty(imagenDeIngrediente))
+    if (imagenDatos != null)
     {
-        ingrediente.ImagenDeIngrediente = imagenDeIngrediente;
+        ingrediente.ImagenDeIngrediente = "";
+        ingrediente.ImagenDatos = imagenDatos;
+        ingrediente.ImagenTipo = imagenTipo;
     }
 
     _db.Ingredientes.Update(ingrediente);

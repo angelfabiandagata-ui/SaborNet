@@ -12,8 +12,13 @@ public class ValoracionRecetaService : ServicioBase<ValoracionReceta>
     }
 
     public async Task<bool> GuardarValoracion(
-        int recetaId, int usuarioId, bool valoracion)
+        int recetaId, int usuarioId, int puntaje)
     {
+        if (puntaje < 1 || puntaje > 5)
+        {
+            return false;
+        }
+
         var receta = await Db.Recetas.FindAsync(recetaId);
 
         if (receta == null)
@@ -32,12 +37,12 @@ public class ValoracionRecetaService : ServicioBase<ValoracionReceta>
             {
                 RecetaID = recetaId,
                 UsuarioID = usuarioId,
-                Valoracion = valoracion
+                Puntaje = puntaje
             });
         }
         else
         {
-            voto.Valoracion = valoracion;
+            voto.Puntaje = puntaje;
         }
 
         await Db.SaveChangesAsync();

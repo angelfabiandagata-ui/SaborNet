@@ -106,7 +106,9 @@
 
                     @foreach (var ing in Model.Ingredientes_Basicos)
                     {
-                        <option value="@ing.ID" data-src="@Url.Content("~/imagenes/" + ing.ImagenDeIngrediente)"
+                        <option value="@ing.ID" data-src="@(ing.ImagenDatos != null
+                            ? Url.Action("Ingrediente", "Imagenes", new { id = ing.ID })
+                            : Url.Content("~/imagenes/" + ing.ImagenDeIngrediente))"
                                 data-unidad="@ing.unidadDeMedida">
                             @ing.nombre
                         </option>

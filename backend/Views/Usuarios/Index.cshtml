@@ -54,7 +54,14 @@
 
                     <tr>
                         <td>
-                            @if (!string.IsNullOrEmpty(usuario.AvatarUrl))
+                            @if (usuario.AvatarDatos != null)
+                            {
+                                <img src="/Imagenes/Avatar/@usuario.Id"
+                                     alt="Avatar"
+                                     class="rounded-circle"
+                                     style="width:45px;height:45px;object-fit:cover;" />
+                            }
+                            else if (!string.IsNullOrEmpty(usuario.AvatarUrl))
                             {
                                 <img src="@usuario.AvatarUrl"
                                      alt="Avatar"
