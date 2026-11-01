@@ -1,7 +1,7 @@
 @model backend.Models.RecetaFormularioViewModel
 
 @{
-    ViewData[index: "Title"] = "Editar receta";
+    ViewData["Title"] = "Editar receta";
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css" />
 
@@ -25,10 +25,13 @@
 <div class="container d-flex justify-content-center align-items-center py-5">
     <div class="card shadow-sm p-4 w-100" style="max-width: 600px; border: 1px solid #54494B;">
 
-        <h3 class='text-center mb-4'>Editar receta</h3>
+        <h3 class="text-center mb-4">Editar receta</h3>
 
-        <form asp-controller="Recetas" asp-action="Editar" method="post" enctype="multipart/form-data"
-              id="formCrearReceta">
+        <form asp-controller="Recetas" asp-action="Editar" asp-route-id="@Model.ID" method="post"
+              enctype="multipart/form-data" id="formCrearReceta">
+
+            @Html.AntiForgeryToken()
+
             <div class="mb-3">
                 <label asp-for="Titulo" class="form-label">Título</label>
                 <input asp-for="Titulo" class="form-control" placeholder="Ej. Milanesas a la napolitana" required />
@@ -41,6 +44,7 @@
                           placeholder="Breve descripción del plato..." required></textarea>
                 <span asp-validation-for="Descripcion" class="text-danger small"></span>
             </div>
+
 
             <div class="mb-3">
                 <label asp-for="Instrucciones" class="form-label">Instrucciones</label>
@@ -61,7 +65,21 @@
                 <label asp-for="Foto" class="form-label">
                     Foto principal
                 </label>
-                <input asp-for="Foto" class="form-control" type="file" accept=".jpg,.jpeg,.png" required />
+
+                @if (!string.IsNullOrWhiteSpace(Model.FotoActual))
+                {
+                    <div class="mb-3">
+                        <img src="@Model.FotoActual" alt="Fotografía actual de la receta" class="img-fluid rounded"
+                             style="max-height: 200px; object-fit: cover;" />
+
+                        <p class="text-muted small mt-2">
+                            Si no seleccionás otra imagen, se conservará la misma
+                        </p>
+                    </div>
+                }
+
+                <input asp-for="Foto" class="form-control" type="file" accept=".jpg,.jpeg,.png" />
+
                 <span asp-validation-for="Foto" class="text-danger small"></span>
             </div>
 

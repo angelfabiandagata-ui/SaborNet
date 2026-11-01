@@ -70,3 +70,6 @@ RENAME COLUMN "IngredienteId" TO "IngredienteID";
 
 ALTER TABLE "RecetaIngredientes"
 RENAME COLUMN "RecetaId" TO "RecetaID";
+
+ALTER TABLE "Recetas"
+ADD COLUMN IF NOT EXISTS "MeGustas" INTEGER NOT NULL DEFAULT 0;

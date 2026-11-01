@@ -19,6 +19,15 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Comentario>(entity =>
+{
+    entity.ToTable("comentarios");
+
+    entity.Property(c => c.calificacion)
+          .HasColumnName("califiacion");
+});
+
+
         modelBuilder.Entity<RecetaIngrediente>()
             .HasKey(ri => new { ri.RecetaID, ri.IngredienteID });
 

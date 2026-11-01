@@ -1,3 +1,4 @@
+
 using backend.data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,9 @@ public class RecetaService : ServicioBase<Receta>
         _db = db;
     }
 
-    internal async Task<(List<Receta> recetas, int total)> ListarPaginado(int pagina, int tamano)
+    internal async Task<(List<Receta> recetas, int total)> ListarPaginado(
+        int pagina,
+        int tamano)
     {
         var consulta = _db.Set<Receta>().AsNoTracking();
 
@@ -35,8 +38,14 @@ public class RecetaService : ServicioBase<Receta>
         {
             ultimoVisto = ultimoVisto.Value.Kind switch
             {
-                DateTimeKind.Local => ultimoVisto.Value.ToUniversalTime(),
-                DateTimeKind.Unspecified => DateTime.SpecifyKind(ultimoVisto.Value, DateTimeKind.Utc),
+                DateTimeKind.Local =>
+                    ultimoVisto.Value.ToUniversalTime(),
+
+                DateTimeKind.Unspecified =>
+                    DateTime.SpecifyKind(
+                        ultimoVisto.Value,
+                        DateTimeKind.Utc),
+
                 _ => ultimoVisto.Value
             };
         }
@@ -45,7 +54,8 @@ public class RecetaService : ServicioBase<Receta>
 
         if (ultimoVisto.HasValue)
         {
-            consulta = consulta.Where(receta => receta.FechaDeLaReceta > ultimoVisto.Value);
+            consulta = consulta.Where(receta =>
+                receta.FechaDeLaReceta > ultimoVisto.Value);
         }
 
         return await consulta
@@ -70,7 +80,8 @@ public class RecetaService : ServicioBase<Receta>
             .ToListAsync();
     }
 
-    internal async Task<IEnumerable<Ingrediente>> BuscarIngredientes(string termino)
+    internal async Task<IEnumerable<Ingrediente>> BuscarIngredientes(
+        string termino)
     {
         return await _db.Set<Ingrediente>()
             .Where(i => i.nombre.Contains(termino))
@@ -82,12 +93,17 @@ public class RecetaService : ServicioBase<Receta>
         return await _db.Set<Categoria>().ToListAsync();
     }
 
-    internal async Task CrearConIngredientes(Receta receta, IEnumerable<(int IngredienteId, decimal Cantidad)> ingredientes)
+    internal async Task CrearConIngredientes(
+        Receta receta,
+        IEnumerable<(int IngredienteId, decimal Cantidad)> ingredientes)
     {
-        using var transaction = await _db.Database.BeginTransactionAsync();
+        using var transaction =
+            await _db.Database.BeginTransactionAsync();
+
         try
         {
             _db.Recetas.Add(receta);
+
             await _db.SaveChangesAsync();
 
             foreach (var item in ingredientes)
@@ -98,10 +114,12 @@ public class RecetaService : ServicioBase<Receta>
                     IngredienteID = item.IngredienteId,
                     Cantidad = item.Cantidad
                 };
+
                 _db.Set<RecetaIngrediente>().Add(recetaIngrediente);
             }
 
             await _db.SaveChangesAsync();
+
             await transaction.CommitAsync();
         }
         catch
@@ -111,14 +129,21 @@ public class RecetaService : ServicioBase<Receta>
         }
     }
 
-    internal async Task<bool> ActualizarConIngredientes(int id, Receta datos, IEnumerable<(int IngredienteId, decimal Cantidad)> ingredientes)
+    internal async Task<bool> ActualizarConIngredientes(
+        int id,
+        Receta datos,
+        IEnumerable<(int IngredienteId, decimal Cantidad)> ingredientes)
     {
         var receta = await _db.Recetas
             .Include(r => r.RecetaIngredientes)
             .FirstOrDefaultAsync(r => r.ID == id);
 
-        if (receta == null) return false;
+        if (receta == null)
+            return false;
 
+        var ingredientesNuevos = ingredientes.ToList();
+
+        // Actualizar los datos generales.
         receta.Titulo = datos.Titulo;
         receta.Descripcion = datos.Descripcion;
         receta.Instrucciones = datos.Instrucciones;
@@ -126,36 +151,85 @@ public class RecetaService : ServicioBase<Receta>
         receta.CategoriaID = datos.CategoriaID;
         receta.FotoPrincipal = datos.FotoPrincipal;
 
-        var existentes = _db.Set<RecetaIngrediente>().Where(ri => ri.RecetaID == id);
-        _db.Set<RecetaIngrediente>().RemoveRange(existentes);
+        // Obtener los ingredientes actuales.
+        var existentes = receta.RecetaIngredientes.ToList();
 
-        foreach (var item in ingredientes)
+        var idsNuevos = ingredientesNuevos
+            .Select(i => i.IngredienteId)
+            .ToHashSet();
+
+        // Quitar ingredientes que ya no están.
+        foreach (var existente in existentes)
         {
-            _db.Set<RecetaIngrediente>().Add(new RecetaIngrediente
+            if (!idsNuevos.Contains(existente.IngredienteID))
             {
-                RecetaID = id,
-                IngredienteID = item.IngredienteId,
-                Cantidad = item.Cantidad
-            });
+                _db.Set<RecetaIngrediente>().Remove(existente);
+            }
+        }
+
+        // Agregar ingredientes nuevos o actualizar cantidades.
+        foreach (var item in ingredientesNuevos)
+        {
+            var existente = existentes.FirstOrDefault(i =>
+                i.IngredienteID == item.IngredienteId);
+
+            if (existente != null)
+            {
+                existente.Cantidad = item.Cantidad;
+            }
+            else
+            {
+                _db.Set<RecetaIngrediente>().Add(
+                    new RecetaIngrediente
+                    {
+                        RecetaID = id,
+                        IngredienteID = item.IngredienteId,
+                        Cantidad = item.Cantidad
+                    });
+            }
         }
 
         await _db.SaveChangesAsync();
+
         return true;
     }
 
     internal async Task<bool> EliminarConDependencias(int id)
     {
         var receta = await _db.Recetas.FindAsync(id);
-        if (receta == null) return false;
 
+        if (receta == null)
+            return false;
+
+        // 1. Eliminar los comentarios asociados a la receta.
+        var comentarios = await _db.Set<Comentario>()
+            .Where(c => c.RecetaID == id)
+            .ToListAsync();
+
+        _db.Set<Comentario>().RemoveRange(comentarios);
+
+        // 2. Eliminar las relaciones con los ingredientes.
+        // Los ingredientes del catálogo NO se eliminan.
+        var ingredientesAsociados = await _db.Set<RecetaIngrediente>()
+            .Where(ri => ri.RecetaID == id)
+            .ToListAsync();
+
+        _db.Set<RecetaIngrediente>().RemoveRange(ingredientesAsociados);
+
+        // 3. Eliminar la receta.
         _db.Recetas.Remove(receta);
+
+        // 4. Guardar los cambios en PostgreSQL.
         await _db.SaveChangesAsync();
+
         return true;
     }
 
     internal async Task<bool> ExistenIngredientes(List<int> ids)
     {
-        var count = await _db.Set<Ingrediente>().CountAsync(i => ids.Contains(i.ID));
+        var count = await _db.Set<Ingrediente>()
+            .CountAsync(i => ids.Contains(i.ID));
+
         return count == ids.Count;
     }
 }

@@ -1,0 +1,76 @@
+@model backend.Models.Receta
+
+@{
+    ViewData["Title"] = "Eliminar receta";
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body p-4">
+
+                    <h2 class="text-center fw-bold color-marron mb-4">
+                        Eliminar receta
+                    </h2>
+
+                    <div class="alert alert-warning text-center">
+                        ¿Estás seguro de que querés eliminar esta receta?
+                        <br />
+                        <strong>Esta acción no se puede deshacer.</strong>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.FotoPrincipal))
+                    {
+                        <img src="@Model.FotoPrincipal"
+                             alt="@Model.Titulo"
+                             class="img-fluid rounded w-100 mb-4"
+                             style="max-height: 280px; object-fit: cover;" />
+                    }
+
+                    <h4 class="text-center fw-semibold mb-3">
+                        @Model.Titulo
+                    </h4>
+
+                    <p class="text-muted text-center">
+                        @Model.Descripcion
+                    </p>
+
+                    <hr />
+
+                    <form asp-controller="Recetas"
+                          asp-action="Eliminar"
+                          asp-route-id="@Model.ID"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+
+                            <a asp-controller="Recetas"
+                               asp-action="Detalle"
+                               asp-route-id="@Model.ID"
+                               class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+                                Sí, eliminar receta
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

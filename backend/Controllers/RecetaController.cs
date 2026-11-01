@@ -241,15 +241,20 @@ public async Task<IActionResult> Crear()
         {
             modelo.ID = id;
             modelo.FotoActual = recetaActual.FotoPrincipal;
+
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
 
-                
+            modelo.Ingredientes_Basicos =
+                await _Iservicio.RetornarIngredientesAlfabeticamente();
 
             return View(modelo);
         }
 
         string? nuevaFoto = null;
+
+        // Guardamos la ruta anterior antes de modificar la receta
+        string fotoAnterior = recetaActual.FotoPrincipal;
 
         try
         {
@@ -277,8 +282,11 @@ public async Task<IActionResult> Crear()
             if (!actualizado)
                 return NotFound();
 
-            if (nuevaFoto != null)
-                EliminarFoto(recetaActual.FotoPrincipal);
+            if (nuevaFoto != null &&
+    !string.Equals(nuevaFoto, fotoAnterior, StringComparison.Ordinal))
+            {
+                EliminarFoto(fotoAnterior);
+            }
 
             TempData["Mensaje"] =
                 "Receta actualizada correctamente.";
@@ -439,26 +447,26 @@ public async Task<IActionResult> Crear()
     }
 
     private async Task<string> GuardarFoto(IFormFile archivo)
+{
+    var carpeta = Path.Combine(
+        _entorno.WebRootPath, "imagenes", "recetas");
+
+    Directory.CreateDirectory(carpeta);
+
+    var extension = Path.GetExtension(
+        archivo.FileName).ToLowerInvariant();
+
+    var nombre = $"{Guid.NewGuid():N}{extension}";
+    var ruta = Path.Combine(carpeta, nombre);
+
+
+    await using (var stream = new FileStream(
+        ruta, FileMode.CreateNew))
     {
-        var carpeta = Path.Combine(
-            _entorno.WebRootPath, "imagenes", "recetas");
-
-        Directory.CreateDirectory(carpeta);
-
-        var extension = Path.GetExtension(
-            archivo.FileName).ToLowerInvariant();
-
-        // El servidor genera el nombre: no usamos el del cliente.
-        var nombre = $"{Guid.NewGuid():N}{extension}";
-        var ruta = Path.Combine(carpeta, nombre);
-
-        await using var stream = new FileStream(
-            ruta, FileMode.CreateNew);
-
         await archivo.CopyToAsync(stream);
-
-        return $"/imagenes/recetas/{nombre}";
     }
+    return $"/imagenes/recetas/{nombre}";
+}
 
     private void EliminarFoto(string? rutaRelativa)
     {
