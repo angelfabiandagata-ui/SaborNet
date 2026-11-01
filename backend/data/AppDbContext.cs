@@ -22,13 +22,8 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Comentario>(entity =>
-{
-    entity.ToTable("comentarios");
-
-    entity.Property(c => c.calificacion)
-          .HasColumnName("califiacion");
-});
+        modelBuilder.Entity<Comentario>()
+    .ToTable("comentarios");
 
 
         modelBuilder.Entity<RecetaIngrediente>()

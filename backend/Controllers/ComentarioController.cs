@@ -1,4 +1,3 @@
-// COMENTARIOS
 
 using System.Security.Claims;
 using backend.Hubs;
@@ -43,7 +42,6 @@ public class ComentariosController : Controller
         {
             id = c.ID,
             texto = c.comentario,
-            calificacion = c.calificacion,
             fecha = c.fechaCreacion,
             usuarioId = c.UsuarioID,
             autor = c.Usuario.Nombre,
@@ -59,25 +57,6 @@ public class ComentariosController : Controller
             total,
             totalPaginas = (int)Math.Ceiling(
                 (double)total / tamano)
-        });
-    }
-
-    // GET: /Comentarios/Resumen?recetaId=5
-    [AllowAnonymous]
-    [HttpGet]
-    public async Task<IActionResult> Resumen(int recetaId)
-    {
-        if (!await _servicio.ExisteReceta(recetaId))
-            return NotFound();
-
-        var (promedio, total) =
-            await _servicio.ObtenerResumen(recetaId);
-
-        return Ok(new
-        {
-            recetaId,
-            promedio,
-            total
         });
     }
 
@@ -103,7 +82,6 @@ public class ComentariosController : Controller
         var comentario = new Comentario
         {
             comentario = modelo.comentario,
-            calificacion = modelo.calificacion,
             fechaCreacion = DateTime.UtcNow,
             UsuarioID = usuarioId.Value,
             RecetaID = modelo.RecetaID
@@ -148,8 +126,7 @@ public class ComentariosController : Controller
         bool actualizado =
             await _servicio.ActualizarComentario(
                 id,
-                modelo.comentario,
-                modelo.calificacion);
+                modelo.comentario);
 
         if (!actualizado)
             return NotFound();

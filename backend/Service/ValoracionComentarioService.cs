@@ -1,3 +1,4 @@
+
 using backend.data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ public class ValoracionComentarioService : ServicioBase<ValoracionComentario>
     {
     }
 
+    // Guardar o actualizar voto positivo/negativo
     public async Task<int?> GuardarValoracion(
         int comentarioId, int usuarioId, bool valoracion)
     {
@@ -41,6 +43,34 @@ public class ValoracionComentarioService : ServicioBase<ValoracionComentario>
         }
 
         await Db.SaveChangesAsync();
+
         return comentario.RecetaID;
+    }
+
+    // Consultar qué votó un usuario en un comentario
+    public async Task<bool?> ObtenerVotoUsuario(
+        int comentarioId, int usuarioId)
+    {
+        return await Db.ValoracionComentarios
+            .AsNoTracking()
+            .Where(v =>
+                v.ComentarioID == comentarioId &&
+                v.UsuarioID == usuarioId)
+            .Select(v => (bool?)v.Valoracion)
+            .FirstOrDefaultAsync();
+    }
+
+    // Obtener cantidad de votos positivos y negativos
+    public async Task<(int positivos, int negativos)>
+        ObtenerTotales(int comentarioId)
+    {
+        var votos = Db.ValoracionComentarios
+            .AsNoTracking()
+            .Where(v => v.ComentarioID == comentarioId);
+
+        int positivos = await votos.CountAsync(v => v.Valoracion);
+        int negativos = await votos.CountAsync(v => !v.Valoracion);
+
+        return (positivos, negativos);
     }
 }

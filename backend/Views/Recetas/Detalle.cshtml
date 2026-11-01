@@ -12,6 +12,16 @@
         as List<backend.Models.Comentario>
         ?? new List<backend.Models.Comentario>();
 
+    double promedio = ViewBag.Promedio != null
+        ? Convert.ToDouble(ViewBag.Promedio)
+        : 0;
+
+    int totalValoraciones = ViewBag.TotalValoraciones != null
+        ? Convert.ToInt32(ViewBag.TotalValoraciones)
+        : 0;
+
+    int estrellas = (int)Math.Round(promedio, MidpointRounding.AwayFromZero);
+
     var miId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
     bool puedeModificar =
@@ -57,18 +67,48 @@
                 @Model.Titulo
             </h1>
 
-            <p class="text-center text-muted mb-4">
+            <p class="text-center text-muted mb-2">
                 De: @Model.Usuario.Nombre
             </p>
 
+            <div class="text-center mb-4" aria-label="Promedio de valoraciones de la receta">
+                @if (totalValoraciones > 0)
+                {
+                    <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                        <span style="color: #E5A127; font-size: 1.5rem;" aria-hidden="true">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= estrellas)
+                                {
+                                    <i class="fa-solid fa-star"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star"></i>
+                                }
+                            }
+                        </span>
+                        <strong>@promedio.ToString("0.0") / 5</strong>
+                        <span class="text-muted">(@totalValoraciones valoraciones)</span>
+                    </div>
+                }
+                else
+                {
+                    <span style="color: #B0B0B0;" aria-hidden="true">☆☆☆☆☆</span>
+                    <span class="text-muted ms-2">Sin valoraciones</span>
+                }
+            </div>
+
             @if (Model.FotoDatos != null)
             {
-                <img src="/Imagenes/Receta/@Model.ID" alt="@Model.Titulo" class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
+                <img src="/Imagenes/Receta/@Model.ID" alt="@Model.Titulo"
+                     class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
                      style="max-height: 650px; object-fit: cover;" />
             }
             else if (!string.IsNullOrEmpty(Model.FotoPrincipal))
             {
-                <img src="@Model.FotoPrincipal" alt="@Model.Titulo" class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
+                <img src="@Model.FotoPrincipal" alt="@Model.Titulo"
+                     class="img-fluid rounded shadow-sm w-100 mb-4 border border-2"
                      style="max-height: 650px; object-fit: cover;" />
             }
             <div class="d-flex justify-content-center
@@ -110,8 +150,7 @@
                                     <span>
                                         @if (item.Ingrediente.ImagenDatos != null)
                                         {
-                                            <img src="/Imagenes/Ingrediente/@item.IngredienteID"
-                                                 alt="@item.Ingrediente.nombre"
+                                            <img src="/Imagenes/Ingrediente/@item.IngredienteID" alt="@item.Ingrediente.nombre"
                                                  style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px;"
                                                  class="me-2 border border-2px" />
                                         }
@@ -159,38 +198,102 @@
 
             <hr class="my-5" />
 
+            
             <h3>Valorar receta</h3>
+
+            @if (TempData["MensajeValoracion"] != null)
+            {
+                <div class="alert alert-info">
+                    @TempData["MensajeValoracion"]
+                </div>
+            }
 
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <form asp-controller="ValoracionReceta"
-                      asp-action="Valorar"
-                      method="post"
-                      class="mb-4">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="recetaId" value="@Model.ID" />
-                    <label for="puntajeReceta" class="form-label">
-                        ¿Cuánto te gustó? (1 a 5)
-                    </label>
-                    <select id="puntajeReceta" name="puntaje" class="form-select mb-2" required>
-                        <option value="">Elegí una puntuación</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                    <button type="submit" class="btn btn-success">Enviar puntuación</button>
-                </form>
+                if (ViewBag.MiValoracion != null)
+                {
+                    int miPuntaje = (int)ViewBag.MiValoracion;
+
+                    <div class="alert alert-success">
+                        <strong>¡Ya valoraste esta receta!</strong>
+
+                        <p class="mb-1 mt-2">
+                            Tu puntuación:
+                            <strong>@miPuntaje de 5 estrellas</strong>
+                        </p>
+
+                        <div class="mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= miPuntaje)
+                                {
+                                    <i class="fa-solid fa-star text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star text-warning"></i>
+                                }
+                            }
+                        </div>
+
+                        <small>
+                            Tu valoración es definitiva y no puede modificarse.
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <form asp-controller="ValoracionReceta" asp-action="Valorar" method="post" class="mb-4">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="recetaId" value="@Model.ID" />
+
+                        <label for="puntajeReceta" class="form-label">
+                            ¿Cuánto te gustó? (1 a 5)
+                        </label>
+
+                        <select id="puntajeReceta" name="puntaje" class="form-select mb-2" required>
+
+                            <option value="">Elegí una puntuación</option>
+                            <option value="1">1 estrella</option>
+                            <option value="2">2 estrellas</option>
+                            <option value="3">3 estrellas</option>
+                            <option value="4">4 estrellas</option>
+                            <option value="5">5 estrellas</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-success">
+                            Enviar puntuación
+                        </button>
+                    </form>
+                }
             }
             else
             {
-                <p><a asp-controller="Login" asp-action="Login">Iniciá sesión</a> para valorar.</p>
+                <p>
+                    <a asp-controller="Login" asp-action="Login">
+                        Iniciá sesión
+                    </a>
+                    para valorar esta receta.
+                </p>
             }
+
 
             <div class="row justify-content-center">
                 <div class="col-lg-9">
+                   
                     <h3 class="color-marron mb-4">Comentarios</h3>
+
+                    @{
+                        var votosComentarios = ViewBag.VotosComentarios
+                            as Dictionary<int, (int positivos, int negativos)>
+                            ?? new Dictionary<int, (int positivos, int negativos)>();
+
+                        var misVotosComentarios = ViewBag.MisVotosComentarios
+                            as Dictionary<int, bool?>
+                            ?? new Dictionary<int, bool?>();
+                    }
 
                     @if (comentarios.Count == 0)
                     {
@@ -199,9 +302,23 @@
 
                     @foreach (var comentario in comentarios)
                     {
+                        // Cantidad de votos del comentario
+                        var totales = votosComentarios.TryGetValue(
+                            comentario.ID, out var datos)
+                            ? datos
+                            : (positivos: 0, negativos: 0);
+
+                        // Voto del usuario actual: true, false o null
+                        bool? miVoto = misVotosComentarios.TryGetValue(
+                            comentario.ID, out var voto)
+                            ? voto
+                            : null;
+
                         <div class="card mb-3">
                             <div class="card-body">
+
                                 <p class="mb-1">@comentario.comentario</p>
+
                                 <small class="text-muted">
                                     @comentario.Usuario.Nombre -
                                     @comentario.fechaCreacion.ToString("g")
@@ -209,26 +326,63 @@
 
                                 @if (User.Identity?.IsAuthenticated == true)
                                 {
-                                    <form asp-controller="ValoracionComentario"
-                                          asp-action="Valorar"
-                                          method="post"
-                                          class="d-flex gap-2 mt-2">
+                                    <form asp-controller="ValoracionComentario" asp-action="Valorar" method="post"
+                                          class="d-flex gap-2 mt-3 flex-wrap">
+
                                         @Html.AntiForgeryToken()
+
                                         <input type="hidden" name="comentarioId" value="@comentario.ID" />
-                                        <button class="btn btn-sm btn-success" name="valoracion" value="true">Positivo</button>
-                                        <button class="btn btn-sm btn-outline-danger" name="valoracion" value="false">Negativo</button>
+
+                                        <button type="submit" name="valoracion" value="true"
+                                                class="btn btn-sm @(miVoto == true ? "btn-success" : "btn-outline-success")">
+
+                                            <i class="fa-solid fa-thumbs-up"></i>
+                                            Positivo (@totales.positivos)
+
+                                            @if (miVoto == true)
+                                            {
+                                                <i class="fa-solid fa-check ms-1"></i>
+                                            }
+                                        </button>
+
+                                        <button type="submit" name="valoracion" value="false"
+                                                class="btn btn-sm @(miVoto == false ? "btn-danger" : "btn-outline-danger")">
+
+                                            <i class="fa-solid fa-thumbs-down"></i>
+                                            Negativo (@totales.negativos)
+
+                                            @if (miVoto == false)
+                                            {
+                                                <i class="fa-solid fa-check ms-1"></i>
+                                            }
+                                        </button>
+
                                     </form>
                                 }
+                                else
+                                {
+                                    <div class="d-flex gap-3 mt-3 text-muted">
+                                        <small>
+                                            <i class="fa-solid fa-thumbs-up"></i>
+                                            @totales.positivos positivos
+                                        </small>
+
+                                        <small>
+                                            <i class="fa-solid fa-thumbs-down"></i>
+                                            @totales.negativos negativos
+                                        </small>
+                                    </div>
+                                }
+
                             </div>
                         </div>
                     }
 
+
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <div class="card shadow-sm mb-4 p-3">
-                            <form asp-controller="Comentarios"
-                                  asp-action="Crear"
-                                  method="post">
+                            <form asp-controller="Comentarios" asp-action="Crear" method="post">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="RecetaID" value="@Model.ID" />
                     
@@ -236,18 +390,6 @@
                                     <label for="textoComentario" class="form-label">Tu opinión</label>
                                     <textarea name="comentario" id="textoComentario" class="form-control" rows="3"
                                               placeholder="Escribí tu comentario sobre la receta..." required></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="calificacion" class="form-label">Calificación</label>
-                                    <select name="calificacion" id="calificacion" class="form-select" required>
-                                        <option value="">Elegí una calificación</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
                                 </div>
 
                                 <button type="submit" class="btn boton-marron">Publicar comentario</button>

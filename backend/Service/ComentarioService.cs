@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using backend.data;
 using backend.Models;
@@ -14,43 +15,60 @@ public class ComentarioService : ServicioBase<Comentario>
         _db = db;
     }
 
-    internal async Task<bool> ActualizarComentario(int id, string textoComentario, int calificacion)
+    // Editar únicamente el texto del comentario
+    internal async Task<bool> ActualizarComentario(
+        int id,
+        string textoComentario)
     {
         var comentario = await _db.Comentarios.FindAsync(id);
-        if (comentario == null) return false;
+
+        if (comentario == null)
+            return false;
 
         comentario.comentario = textoComentario;
-        comentario.calificacion = calificacion;
 
-        _db.Comentarios.Update(comentario);
         await _db.SaveChangesAsync();
+
         return true;
     }
 
+    // Eliminar comentario
     internal async Task<bool> EliminarComentario(int id)
     {
         var comentario = await _db.Comentarios.FindAsync(id);
-        if (comentario == null) return false;
+
+        if (comentario == null)
+            return false;
 
         _db.Comentarios.Remove(comentario);
+
         await _db.SaveChangesAsync();
+
         return true;
     }
 
+    // Verificar que exista la receta
     internal async Task<bool> ExisteReceta(int recetaId)
     {
-        return await _db.Recetas.AnyAsync(r => r.ID == recetaId);
+        return await _db.Recetas
+            .AnyAsync(r => r.ID == recetaId);
     }
 
-    internal async Task<(IEnumerable<Comentario> comentarios, int total)> ListarPorReceta(int recetaId, int pagina, int tamano)
+    // Listar comentarios con paginación
+    internal async Task<
+        (IEnumerable<Comentario> comentarios, int total)>
+        ListarPorReceta(int recetaId, int pagina, int tamano)
     {
         var query = _db.Comentarios
+            .AsNoTracking()
             .Include(c => c.Usuario)
             .Where(c => c.RecetaID == recetaId);
 
         var total = await query.CountAsync();
 
         var comentarios = await query
+            .OrderByDescending(c => c.fechaCreacion)
+            .ThenByDescending(c => c.ID)
             .Skip((pagina - 1) * tamano)
             .Take(tamano)
             .ToListAsync();
@@ -58,6 +76,7 @@ public class ComentarioService : ServicioBase<Comentario>
         return (comentarios, total);
     }
 
+    // Listar todos los comentarios de una receta
     public Task<List<Comentario>> ListarPorReceta(int recetaId)
     {
         return _db.Comentarios
@@ -68,22 +87,11 @@ public class ComentarioService : ServicioBase<Comentario>
             .ToListAsync();
     }
 
+    // Obtener un comentario por su ID
     internal async Task<Comentario?> ObtenerComentario(int id)
     {
         return await _db.Comentarios
             .Include(c => c.Usuario)
             .FirstOrDefaultAsync(c => c.ID == id);
-    }
-
-    internal async Task<(double promedio, int total)> ObtenerResumen(int recetaId)
-    {
-        var query = _db.Comentarios.Where(c => c.RecetaID == recetaId);
-
-        var total = await query.CountAsync();
-        if (total == 0) return (0, 0);
-
-        var promedio = await query.AverageAsync(c => c.calificacion);
-
-        return (promedio, total);
     }
 }

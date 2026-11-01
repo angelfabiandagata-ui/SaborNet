@@ -10,9 +10,6 @@ public class Comentario
     [Required(ErrorMessage = "El Comentario no puede estar vacio")]
     public String comentario{get; set;} ="";
 
-    [Range(1, 5, ErrorMessage = "La calificacion debe estar entre 1 y 5")]
-    public int calificacion {get; set;}
-
     [Required]
     public DateTime fechaCreacion {get; set;}
 
