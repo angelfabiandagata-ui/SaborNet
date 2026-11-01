@@ -32,7 +32,15 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<RecetaIngrediente>()
-            .HasKey(ri => new { ri.RecetaID, ri.IngredienteID });
+    .HasKey(ri => ri.ID);
+
+        modelBuilder.Entity<RecetaIngrediente>()
+            .Property(ri => ri.ID)
+            .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<RecetaIngrediente>()
+        .HasIndex(ri => new { ri.RecetaID, ri.IngredienteID })
+        .IsUnique();
 
         modelBuilder.Entity<RecetaIngrediente>()
             .HasOne(ri => ri.Receta)
