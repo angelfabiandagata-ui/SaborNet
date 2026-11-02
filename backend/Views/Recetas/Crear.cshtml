@@ -120,21 +120,7 @@
                 <label for="miBuscador" class="form-label">
                     Buscar ingrediente
                 </label>
-
-                <select id="miBuscador" class="form-select">
-                    <option value="">Buscar ingrediente...</option>
-
-                    @foreach (var ing in Model.Ingredientes_Basicos)
-                    {
-                        <option value="@ing.ID"
-                                data-src="@(ing.ImagenDatos != null
-                                    ? Url.Action("Ingrediente", "Imagenes", new { id = ing.ID })
-                                    : Url.Content("~/imagenes/" + ing.ImagenDeIngrediente))"
-                                data-unidad="@ing.unidadDeMedida">
-                            @ing.nombre
-                        </option>
-                    }
-                </select>
+                <select id="miBuscador" class="form-select"></select>
             </div>
 
             <div class="mb-3">
@@ -174,24 +160,15 @@
                 {
                     var ingrediente = Model.Ingredientes[i];
 
-                    var basico = Model.Ingredientes_Basicos
-                        .FirstOrDefault(x =>
-                            x.ID == ingrediente.IngredienteID);
-
                     <div class="list-group-item d-flex
                                 justify-content-between
                                 align-items-center gap-2"
                          data-ingrediente-id="@ingrediente.IngredienteID">
 
                         <div>
-                            <strong>
-                                @(basico?.nombre ?? ingrediente.Nombre
-                                  ?? "Ingrediente")
-                            </strong>
-
+                            <strong>@ingrediente.Nombre</strong>
                             <span class="text-muted">
                                 — @ingrediente.Cantidad
-                                @(basico?.unidadDeMedida ?? "")
                             </span>
                         </div>
 
@@ -241,60 +218,57 @@ document.addEventListener("DOMContentLoaded", function () {
     const botonAgregar = document.getElementById("btnAgregarIngrediente");
     const formulario = document.getElementById("formCrearReceta");
 
+    let ingredienteSeleccionado = null;
+
     const tomSelect = new TomSelect(buscador, {
         maxItems: 1,
         create: false,
-        placeholder: "Buscar ingrediente...",
-
+        valueField: "id",
+        labelField: "text",
+        searchField: "text",
+        placeholder: "Escribí para buscar un ingrediente...",
+        shouldLoad: function (query) {
+            return query.length >= 2;
+        },
+        load: function (query, callback) {
+            fetch("/Recetas/BuscarIngredientes?termino=" + encodeURIComponent(query))
+                .then(function (respuesta) { return respuesta.json(); })
+                .then(function (datos) { callback(datos); })
+                .catch(function () { callback(); });
+        },
         render: {
             option: function (data, escape) {
-                const imagen = data.src
-                    ? `<img src="${escape(data.src)}"
-                            class="ts-img"
-                            alt="">`
-                    : "";
-
-                return `<div>${imagen}${escape(data.text)}</div>`;
+                return `<div>${escape(data.text)}</div>`;
             },
-
             item: function (data, escape) {
-                const imagen = data.src
-                    ? `<img src="${escape(data.src)}"
-                            class="ts-img"
-                            alt="">`
-                    : "";
-
-                return `<div>${imagen}${escape(data.text)}</div>`;
+                return `<div>${escape(data.text)}</div>`;
+            },
+            no_results: function () {
+                return `<div class="no-results">Sin resultados. Probá otro término.</div>`;
             }
         },
-
         onChange: function (valor) {
-            const opcion = buscador.querySelector(
-                `option[value="${valor}"]`
-            );
-
-            unidad.textContent =
-                opcion?.dataset.unidad || "Unidad";
-
             error.textContent = "";
+            if (!valor) {
+                ingredienteSeleccionado = null;
+                unidad.textContent = "Unidad";
+                return;
+            }
+            const opcionData = tomSelect.options[valor];
+            if (opcionData) {
+                ingredienteSeleccionado = opcionData;
+                const match = opcionData.text.match(/\(([^)]+)\)$/);
+                unidad.textContent = match ? match[1] : "Unidad";
+            }
         }
     });
 
     function reindexarIngredientes() {
-        const filas = lista.querySelectorAll(
-            "[data-ingrediente-id]"
-        );
-
+        const filas = lista.querySelectorAll("[data-ingrediente-id]");
         filas.forEach(function (fila, indice) {
-            const inputs = fila.querySelectorAll(
-                ".datos-ingrediente input"
-            );
-
-            inputs[0].name =
-                `Ingredientes[${indice}].IngredienteID`;
-
-            inputs[1].name =
-                `Ingredientes[${indice}].Cantidad`;
+            const inputs = fila.querySelectorAll(".datos-ingrediente input");
+            inputs[0].name = `Ingredientes[${indice}].IngredienteID`;
+            inputs[1].name = `Ingredientes[${indice}].Cantidad`;
         });
     }
 
@@ -305,15 +279,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const valorCantidad = Number(cantidad.value);
 
         if (!id) {
-            error.textContent =
-                "Seleccioná un ingrediente.";
+            error.textContent = "Seleccioná un ingrediente.";
             return;
         }
 
-        if (!Number.isFinite(valorCantidad) ||
-            valorCantidad <= 0) {
-            error.textContent =
-                "Ingresá una cantidad mayor a cero.";
+        if (!Number.isFinite(valorCantidad) || valorCantidad <= 0) {
+            error.textContent = "Ingresá una cantidad mayor a cero.";
             return;
         }
 
@@ -322,35 +293,24 @@ document.addEventListener("DOMContentLoaded", function () {
         ).some(fila => fila.dataset.ingredienteId === id);
 
         if (repetido) {
-            error.textContent =
-                "Este ingrediente ya está agregado.";
+            error.textContent = "Este ingrediente ya está agregado.";
             return;
         }
 
-        const opcion = buscador.querySelector(
-            `option[value="${id}"]`
-        );
-
-        const nombre = opcion?.textContent.trim() || "Ingrediente";
-        const nombreUnidad = opcion?.dataset.unidad || "";
+        const nombre = ingredienteSeleccionado?.text?.replace(/\s*\([^)]*\)$/, "").trim() || "Ingrediente";
+        const match = ingredienteSeleccionado?.text?.match(/\(([^)]+)\)$/);
+        const nombreUnidad = match ? match[1] : "";
 
         const fila = document.createElement("div");
-        fila.className =
-            "list-group-item d-flex justify-content-between " +
-            "align-items-center gap-2";
-
+        fila.className = "list-group-item d-flex justify-content-between align-items-center gap-2";
         fila.dataset.ingredienteId = id;
 
         const descripcion = document.createElement("div");
-
         const titulo = document.createElement("strong");
         titulo.textContent = nombre;
-
         const detalle = document.createElement("span");
         detalle.className = "text-muted";
-        detalle.textContent =
-            ` — ${valorCantidad} ${nombreUnidad}`;
-
+        detalle.textContent = ` — ${valorCantidad} ${nombreUnidad}`;
         descripcion.append(titulo, detalle);
 
         const datos = document.createElement("div");
@@ -368,42 +328,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const quitar = document.createElement("button");
         quitar.type = "button";
-        quitar.className =
-            "btn btn-sm btn-outline-danger btn-quitar";
+        quitar.className = "btn btn-sm btn-outline-danger btn-quitar";
         quitar.textContent = "Quitar";
 
         fila.append(descripcion, datos, quitar);
         lista.appendChild(fila);
 
         reindexarIngredientes();
-
         tomSelect.clear();
         cantidad.value = "";
         unidad.textContent = "Unidad";
     }
 
-    botonAgregar.addEventListener(
-        "click",
-        agregarIngrediente
-    );
+    botonAgregar.addEventListener("click", agregarIngrediente);
 
     lista.addEventListener("click", function (evento) {
         const boton = evento.target.closest(".btn-quitar");
-
         if (!boton) return;
-
         boton.closest("[data-ingrediente-id]").remove();
         reindexarIngredientes();
     });
 
     formulario.addEventListener("submit", function (evento) {
-        if (lista.querySelectorAll(
-            "[data-ingrediente-id]"
-        ).length === 0) {
+        if (lista.querySelectorAll("[data-ingrediente-id]").length === 0) {
             evento.preventDefault();
-
-            error.textContent =
-                "Agregá al menos un ingrediente a la receta.";
+            error.textContent = "Agregá al menos un ingrediente a la receta.";
         }
     });
 
