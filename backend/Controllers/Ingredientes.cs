@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using backend.Models;
 using SaborNet.Service;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace backend.Controllers;
 
 public class IngredientesController : Controller
 {
+    
     private readonly IngredienteService _servicio;
 
     public IngredientesController(IngredienteService servicio)
@@ -111,6 +114,7 @@ public class IngredientesController : Controller
     // ==========================================
 
     // GET: /Ingredientes/Crear
+    [Authorize(Roles = "Administrador")]
     [HttpGet]
     public IActionResult Crear()
     {
@@ -118,6 +122,7 @@ public class IngredientesController : Controller
     }
 
     // POST: /Ingredientes/Crear
+    [Authorize(Roles = "Administrador")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Crear(
@@ -173,6 +178,7 @@ public class IngredientesController : Controller
     // POST: /Ingredientes/CrearAjax
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> CrearAjax(
         string nombre,
         string unidadDeMedida,
@@ -228,6 +234,7 @@ public class IngredientesController : Controller
 
     // GET: /Ingredientes/Editar/5
     [HttpGet]
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Editar(int id)
     {
         var ingrediente =
@@ -242,6 +249,7 @@ public class IngredientesController : Controller
     // POST: /Ingredientes/Editar/5
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Editar(
         int id,
         string nombre,
@@ -311,6 +319,7 @@ public class IngredientesController : Controller
     // POST: /Ingredientes/EditarAjax/5
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> EditarAjax(
         int id,
         string nombre,
@@ -391,6 +400,7 @@ public class IngredientesController : Controller
     // ==========================================
 
     // POST: /Ingredientes/Eliminar/5
+    [Authorize(Roles = "Administrador")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Eliminar(int id)
