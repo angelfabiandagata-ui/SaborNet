@@ -60,10 +60,4 @@ public class IngredienteService : ServicioBase<Ingrediente>
         return (items, totalItems);
     }
 
-    public async Task<List<Ingrediente>> RetornarIngredientesAlfabeticamente()
-    {
-    return await Db.Ingredientes 
-            .OrderBy(i => i.nombre)
-            .ToListAsync();
-    }
 }

@@ -12,60 +12,57 @@ namespace backend.Controllers;
 public class RecetasController : Controller
 {
     private readonly RecetaService _servicio;
-    private readonly IngredienteService _Iservicio;
     private readonly ComentarioService _comentarioServicio;
     private readonly ValoracionRecetaService _valoracionServicio;
     private readonly ValoracionComentarioService _valoracionComentarioServicio;
     public RecetasController(
         RecetaService servicio,
-        IngredienteService Iservicio,
         ComentarioService comentarioServicio,
         ValoracionRecetaService valoracionServicio,
         ValoracionComentarioService valoracionComentarioServicio)
     {
         _servicio = servicio;
-        _Iservicio = Iservicio;
         _comentarioServicio = comentarioServicio;
         _valoracionServicio = valoracionServicio;
         _valoracionComentarioServicio = valoracionComentarioServicio;
     }
 
+// GET: /Recetas
+[HttpGet]
+public async Task<IActionResult> Index(string? termino, int pagina = 1)
+{
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
 
-    // GET: /Recetas
-    [HttpGet]
-    public async Task<IActionResult> Index(int pagina = 1)
-    {
-        const int tamano = 10;
-        pagina = Math.Max(1, pagina);
+    var (recetas, total) =
+        await _servicio.ListarPaginado(pagina, tamano, termino);
 
-        var (recetas, total) =
-            await _servicio.ListarPaginado(pagina, tamano);
-
-        ViewBag.PaginaActual = pagina;
-        ViewBag.TotalPaginas =
-            (int)Math.Ceiling((double)total / tamano);
-        ViewBag.Promedios = await _valoracionServicio.ObtenerPromedios(
+    ViewBag.Termino = termino;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
+    ViewBag.Promedios = await _valoracionServicio.ObtenerPromedios(
         recetas.Select(r => r.ID));
 
-        return View(recetas);
-    }
+    return View(recetas);
+}
 
-    // GET: /Recetas/MasPopulares
-    [HttpGet]
-    public async Task<IActionResult> MasPopulares(int pagina = 1)
-    {
-        const int tamano = 10;
-        pagina = Math.Max(1, pagina);
+// GET: /Recetas/MasPopulares
+[HttpGet]
+public async Task<IActionResult> MasPopulares(int pagina = 1)
+{
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
 
-        var (recetas, total) =
-            await _servicio.ListarPaginado(pagina, tamano);
+    var (recetas, total) =
+        await _servicio.ListarPopularesPaginado(pagina, tamano);
 
-        ViewBag.PaginaActual = pagina;
-        ViewBag.TotalPaginas =
-            (int)Math.Ceiling((double)total / tamano);
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
 
-        return View(recetas);
-    }
+    return View(recetas);
+}
 
     // GET: /Recetas/MasRecientes?ultimoVisto=2026-01-01T00:00:00
     [HttpGet]
@@ -175,12 +172,7 @@ public class RecetasController : Controller
 public async Task<IActionResult> Crear()
 {
     ViewBag.Categorias = await _servicio.ObtenerCategorias();
-    
-    var vista = new RecetaFormularioViewModel();
-
-    vista.Ingredientes_Basicos = await _Iservicio.RetornarIngredientesAlfabeticamente();
-
-    return View(vista); 
+    return View(new RecetaFormularioViewModel());
 }
 
 
@@ -202,9 +194,6 @@ public async Task<IActionResult> Crear()
         {
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
-
-            modelo.Ingredientes_Basicos =
-                await _Iservicio.RetornarIngredientesAlfabeticamente();
 
             return View(modelo);
         }
@@ -266,8 +255,7 @@ public async Task<IActionResult> Crear()
                 {
                     IngredienteID = i.IngredienteID,
                     Cantidad = i.Cantidad
-                }).ToList(),
-            Ingredientes_Basicos = await _Iservicio.RetornarIngredientesAlfabeticamente()
+                }).ToList()
         };
 
         ViewBag.Categorias =
@@ -303,9 +291,6 @@ public async Task<IActionResult> Crear()
 
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
-
-            modelo.Ingredientes_Basicos =
-                await _Iservicio.RetornarIngredientesAlfabeticamente();
 
             return View(modelo);
         }
@@ -498,4 +483,37 @@ public async Task<IActionResult> Crear()
 
         return (memoria.ToArray(), tipo);
     }
+    // GET: /Recetas/MisRecetas
+[Authorize]
+[HttpGet]
+public async Task<IActionResult> MisRecetas(
+    string? termino,
+    int pagina = 1)
+{
+    var usuarioId = ObtenerUsuarioId();
+
+    if (usuarioId == null)
+        return Challenge();
+
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
+
+    var (recetas, total) =
+        await _servicio.ListarMisRecetasPaginado(
+            usuarioId.Value,
+            pagina,
+            tamano,
+            termino);
+
+    ViewBag.Termino = termino;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
+
+    ViewBag.Promedios =
+        await _valoracionServicio.ObtenerPromedios(
+            recetas.Select(r => r.ID));
+
+    return View(recetas);
+}
 }

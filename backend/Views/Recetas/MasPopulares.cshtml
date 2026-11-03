@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Recetas Populares";
+    int paginaActual = (int)(ViewBag.PaginaActual ?? 1);
+    int totalPaginas = (int)(ViewBag.TotalPaginas ?? 1);
 }
 
 <div class="container py-5">
@@ -11,12 +13,9 @@
     </h1>
     <hr>
 
-
     <p class="text-center text-muted">
         Descubrí los sabores favoritos de la comunidad
     </p>
-
-
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
 
@@ -36,8 +35,9 @@
                     }
 
                     <div class="card-body text-center">
-                        <h5 class="card-title fw-semibold mb-0">
-                            @receta.Titulo
+                        <h5 class="card-title fw-semibold mb-1">
+                            <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@receta.ID"
+                               class="text-decoration-none text-dark stretched-link">@receta.Titulo</a>
                         </h5>
                     </div>
                 </div>
@@ -45,5 +45,22 @@
         }
 
     </div>
+
+    @if (totalPaginas > 1)
+    {
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(paginaActual <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="MasPopulares" asp-route-pagina="@(paginaActual - 1)">Anterior</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">@paginaActual de @totalPaginas</span>
+                </li>
+                <li class="page-item @(paginaActual >= totalPaginas ? "disabled" : "")">
+                    <a class="page-link" asp-action="MasPopulares" asp-route-pagina="@(paginaActual + 1)">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    }
 
 </div>
