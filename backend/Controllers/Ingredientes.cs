@@ -43,7 +43,7 @@ public class IngredientesController : Controller
         int pagina = 1,
         string? buscar = null)
     {
-        const int tamano = 10;
+        const int tamano = 12;
 
         pagina = Math.Max(1, pagina);
 
