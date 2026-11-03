@@ -84,7 +84,10 @@ public class RecetaService : ServicioBase<Receta>
         string termino)
     {
         return await _db.Set<Ingrediente>()
-            .Where(i => i.nombre.Contains(termino))
+            .AsNoTracking()
+            .Where(i => EF.Functions.ILike(i.nombre, $"%{termino}%"))
+            .OrderBy(i => i.nombre)
+            .Take(20)
             .ToListAsync();
     }
 
