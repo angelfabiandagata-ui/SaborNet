@@ -26,7 +26,6 @@ public class RecetaFormularioViewModel
     public string? FotoActual { get; set; }
 
     public List<IngredienteFormularioViewModel> Ingredientes { get; set; } = new();
-    public List<Ingrediente> Ingredientes_Basicos { get; set; } = new();
 }
 
 public class IngredienteFormularioViewModel

@@ -115,7 +115,10 @@ internal async Task<(List<Receta> recetas, int total)> ListarPopularesPaginado(
         string termino)
     {
         return await _db.Set<Ingrediente>()
-            .Where(i => i.nombre.Contains(termino))
+            .AsNoTracking()
+            .Where(i => EF.Functions.ILike(i.nombre, $"%{termino}%"))
+            .OrderBy(i => i.nombre)
+            .Take(20)
             .ToListAsync();
     }
 

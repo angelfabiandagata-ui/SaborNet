@@ -217,6 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const error = document.getElementById("errorIngrediente");
     const botonAgregar = document.getElementById("btnAgregarIngrediente");
     const formulario = document.getElementById("formCrearReceta");
+    const buscarIngredientesUrl = '@Url.Action("BuscarIngredientes", "Recetas")';
 
     let ingredienteSeleccionado = null;
 
@@ -228,13 +229,22 @@ document.addEventListener("DOMContentLoaded", function () {
         searchField: "text",
         placeholder: "Escribí para buscar un ingrediente...",
         shouldLoad: function (query) {
-            return query.length >= 2;
+            return query.trim().length >= 2;
         },
         load: function (query, callback) {
-            fetch("/Recetas/BuscarIngredientes?termino=" + encodeURIComponent(query))
-                .then(function (respuesta) { return respuesta.json(); })
+            error.textContent = "";
+            fetch(buscarIngredientesUrl + "?termino=" + encodeURIComponent(query.trim()))
+                .then(function (respuesta) {
+                    if (!respuesta.ok) {
+                        throw new Error("No se pudo buscar ingredientes.");
+                    }
+                    return respuesta.json();
+                })
                 .then(function (datos) { callback(datos); })
-                .catch(function () { callback(); });
+                .catch(function () {
+                    error.textContent = "No se pudo buscar ingredientes. Intentá nuevamente.";
+                    callback();
+                });
         },
         render: {
             option: function (data, escape) {

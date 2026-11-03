@@ -12,19 +12,16 @@ namespace backend.Controllers;
 public class RecetasController : Controller
 {
     private readonly RecetaService _servicio;
-    private readonly IngredienteService _Iservicio;
     private readonly ComentarioService _comentarioServicio;
     private readonly ValoracionRecetaService _valoracionServicio;
     private readonly ValoracionComentarioService _valoracionComentarioServicio;
     public RecetasController(
         RecetaService servicio,
-        IngredienteService Iservicio,
         ComentarioService comentarioServicio,
         ValoracionRecetaService valoracionServicio,
         ValoracionComentarioService valoracionComentarioServicio)
     {
         _servicio = servicio;
-        _Iservicio = Iservicio;
         _comentarioServicio = comentarioServicio;
         _valoracionServicio = valoracionServicio;
         _valoracionComentarioServicio = valoracionComentarioServicio;
@@ -175,12 +172,7 @@ public async Task<IActionResult> MasPopulares(int pagina = 1)
 public async Task<IActionResult> Crear()
 {
     ViewBag.Categorias = await _servicio.ObtenerCategorias();
-    
-    var vista = new RecetaFormularioViewModel();
-
-    vista.Ingredientes_Basicos = await _Iservicio.RetornarIngredientesAlfabeticamente();
-
-    return View(vista); 
+    return View(new RecetaFormularioViewModel());
 }
 
 
@@ -202,9 +194,6 @@ public async Task<IActionResult> Crear()
         {
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
-
-            modelo.Ingredientes_Basicos =
-                await _Iservicio.RetornarIngredientesAlfabeticamente();
 
             return View(modelo);
         }
@@ -266,8 +255,7 @@ public async Task<IActionResult> Crear()
                 {
                     IngredienteID = i.IngredienteID,
                     Cantidad = i.Cantidad
-                }).ToList(),
-            Ingredientes_Basicos = await _Iservicio.RetornarIngredientesAlfabeticamente()
+                }).ToList()
         };
 
         ViewBag.Categorias =
@@ -303,9 +291,6 @@ public async Task<IActionResult> Crear()
 
             ViewBag.Categorias =
                 await _servicio.ObtenerCategorias();
-
-            modelo.Ingredientes_Basicos =
-                await _Iservicio.RetornarIngredientesAlfabeticamente();
 
             return View(modelo);
         }
