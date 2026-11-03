@@ -14,15 +14,20 @@ public class RecetasController : Controller
     private readonly RecetaService _servicio;
     private readonly IngredienteService _Iservicio;
     private readonly ComentarioService _comentarioServicio;
-
+    private readonly ValoracionRecetaService _valoracionServicio;
+    private readonly ValoracionComentarioService _valoracionComentarioServicio;
     public RecetasController(
         RecetaService servicio,
         IngredienteService Iservicio,
-        ComentarioService comentarioServicio)
+        ComentarioService comentarioServicio,
+        ValoracionRecetaService valoracionServicio,
+        ValoracionComentarioService valoracionComentarioServicio)
     {
         _servicio = servicio;
         _Iservicio = Iservicio;
         _comentarioServicio = comentarioServicio;
+        _valoracionServicio = valoracionServicio;
+        _valoracionComentarioServicio = valoracionComentarioServicio;
     }
 
 
@@ -39,6 +44,8 @@ public class RecetasController : Controller
         ViewBag.PaginaActual = pagina;
         ViewBag.TotalPaginas =
             (int)Math.Ceiling((double)total / tamano);
+        ViewBag.Promedios = await _valoracionServicio.ObtenerPromedios(
+        recetas.Select(r => r.ID));
 
         return View(recetas);
     }
@@ -71,20 +78,78 @@ public class RecetasController : Controller
 
     // GET: /Recetas/Detalle/5
     [HttpGet]
+
     public async Task<IActionResult> Detalle(int id)
     {
+        // Obtener la receta
         var receta = await _servicio.ObtenerDetalle(id);
 
         if (receta == null)
             return NotFound();
 
+        // Obtener los ingredientes
         ViewBag.Ingredientes =
             await _servicio.ObtenerIngredientes(id);
-        ViewBag.Comentarios =
+
+        // Obtener los comentarios
+        var comentarios =
             await _comentarioServicio.ListarPorReceta(id);
+
+        ViewBag.Comentarios = comentarios;
+
+        // Obtener el promedio de valoraciones de la receta
+        var resultado =
+            await _valoracionServicio.ObtenerPromedio(id);
+
+        ViewBag.Promedio = resultado.promedio;
+        ViewBag.TotalValoraciones = resultado.total;
+        ViewBag.MiValoracion = null;
+
+        int? usuarioId = null;
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            string? idUsuario = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (int.TryParse(idUsuario, out int idUsuarioActual))
+            {
+                usuarioId = idUsuarioActual;
+
+                ViewBag.MiValoracion =
+                    await _valoracionServicio.ObtenerVotoUsuario(
+                        id, idUsuarioActual);
+            }
+        }
+
+        // Guardar los votos positivos y negativos de cada comentario
+        var votosComentarios =
+            new Dictionary<int, (int positivos, int negativos)>();
+
+        // Guardar qué votó el usuario actual en cada comentario
+        var misVotosComentarios =
+            new Dictionary<int, bool?>();
+
+        foreach (var comentario in comentarios)
+        {
+            votosComentarios[comentario.ID] =
+                await _valoracionComentarioServicio.ObtenerTotales(
+                    comentario.ID);
+
+            if (usuarioId.HasValue)
+            {
+                misVotosComentarios[comentario.ID] =
+                    await _valoracionComentarioServicio.ObtenerVotoUsuario(
+                        comentario.ID, usuarioId.Value);
+            }
+        }
+
+        ViewBag.VotosComentarios = votosComentarios;
+        ViewBag.MisVotosComentarios = misVotosComentarios;
 
         return View(receta);
     }
+
 
     // GET: /Recetas/BuscarIngredientes?termino=har
     [HttpGet]

@@ -113,3 +113,6 @@ ALTER TABLE "ValoracionRecetas"
 
 ALTER TABLE "ValoracionRecetas"
     ALTER COLUMN "Valoracion" SET DEFAULT FALSE;
+
+    ALTER TABLE public.comentarios
+DROP COLUMN IF EXISTS califiacion;

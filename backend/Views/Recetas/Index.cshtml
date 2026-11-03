@@ -1,67 +1,143 @@
+
 @model IEnumerable<backend.Models.Receta>
 
 @{
     ViewData["Title"] = "Recetas";
+
+    var promedios = ViewBag.Promedios
+        as Dictionary<int, (double promedio, int total)>
+        ?? new Dictionary<int, (double promedio, int total)>();
 }
 
-
-
 <div class="container py-5">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Recetas</h2>
 
-        <a asp-action="Crear" asp-controller="Recetas"
+        <a asp-action="Crear"
+           asp-controller="Recetas"
            class="btn boton-marron">
-           <i class="fa-solid fa-plus"></i> Crear
+            <i class="fa-solid fa-plus"></i> Crear
         </a>
     </div>
 
-<div class="row g-4">
+    <div class="row g-4">
 
-    @foreach (var receta in Model)
-    {
-        <div class="col-md-4">
+        @foreach (var receta in Model)
+        {
+            var valoracion = promedios.GetValueOrDefault(receta.ID);
 
-            <div class="card h-100 shadow-sm" style="border: 1px solid #54494B; overflow: hidden;">
+            int estrellas = (int)Math.Round(
+                valoracion.promedio,
+                MidpointRounding.AwayFromZero
+            );
 
-                @if (receta.FotoDatos != null)
-                {
-                    <img src="/Imagenes/Receta/@receta.ID" class="card-img-top" alt="@receta.Titulo"
-                         style="height: 220px; object-fit: cover;" />
-                }
-                else if (!string.IsNullOrEmpty(receta.FotoPrincipal))
-                {
-                    <img src="@receta.FotoPrincipal" class="card-img-top" alt="@receta.Titulo"
-                         style="height: 220px; object-fit: cover;" />
-                }
-                <div class="card-body d-flex flex-column">
+            <div class="col-md-4">
 
-                    <h5 class="card-title">
-                        @receta.Titulo
-                    </h5>
+                <div class="card h-100 shadow-sm"
+                     style="border: 1px solid #54494B; overflow: hidden;">
 
-                    <p class="card-text">
-                        @receta.Descripcion
-                    </p>
+                    @if (receta.FotoDatos != null)
+                    {
+                        <img src="/Imagenes/Receta/@receta.ID"
+                             class="card-img-top"
+                             alt="@receta.Titulo"
+                             style="height: 220px; object-fit: cover;" />
+                    }
+                    else if (!string.IsNullOrEmpty(receta.FotoPrincipal))
+                    {
+                        <img src="@receta.FotoPrincipal"
+                             class="card-img-top"
+                             alt="@receta.Titulo"
+                             style="height: 220px; object-fit: cover;" />
+                    }
 
-                    <a asp-controller="Recetas" asp-action="Detalle" asp-route-id="@receta.ID"
-                       class="btn boton-marron mt-auto">
-                        Ver Detalles
-                    </a>
+                    <div class="card-body d-flex flex-column">
+
+                        <h5 class="card-title">
+                            @receta.Titulo
+                        </h5>
+
+                        <!-- PROMEDIO DE VALORACIONES -->
+                        <div class="mb-3">
+
+                            @if (valoracion.total > 0)
+                            {
+                                <div class="d-flex align-items-center flex-wrap gap-2">
+
+                                    <span style="color: #E5A127; font-size: 1.25rem;">
+
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= estrellas)
+                                            {
+                                                <i class="fa-solid fa-star"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-regular fa-star"></i>
+                                            }
+                                        }
+
+                                    </span>
+
+                                    <strong>
+                                        @valoracion.promedio.ToString("0.0") / 5
+                                    </strong>
+
+                                    <small class="text-muted">
+                                        (@valoracion.total valoraciones)
+                                    </small>
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center gap-2">
+
+                                    <span style="color: #B0B0B0; font-size: 1.25rem;">
+
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fa-regular fa-star"></i>
+                                        }
+
+                                    </span>
+
+                                    <small class="text-muted">
+                                        Sin valoraciones
+                                    </small>
+
+                                </div>
+                            }
+
+                        </div>
+
+                        <p class="card-text">
+                            @receta.Descripcion
+                        </p>
+
+                        <a asp-controller="Recetas"
+                           asp-action="Detalle"
+                           asp-route-id="@receta.ID"
+                           class="btn boton-marron mt-auto">
+                            Ver Detalles
+                        </a>
+
+                    </div>
 
                 </div>
-            </div>
 
+            </div>
+        }
+
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center mt-4">
+            Todavía no hay recetas publicadas.
         </div>
     }
-
-</div>
-
-@if (!Model.Any())
-{
-    <div class="alert alert-info text-center">
-        Todavía no hay recetas publicadas.
-    </div>
-}
 
 </div>

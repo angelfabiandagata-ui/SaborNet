@@ -3,8 +3,8 @@
 @{
     ViewData["Title"] = "Editar receta";
 }
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css" />
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css" />
 
 <style>
     .ts-wrapper .option,
@@ -45,7 +45,6 @@
                 <span asp-validation-for="Descripcion" class="text-danger small"></span>
             </div>
 
-
             <div class="mb-3">
                 <label asp-for="Instrucciones" class="form-label">Instrucciones</label>
                 <textarea asp-for="Instrucciones" class="form-control" rows="4"
@@ -62,16 +61,13 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Foto" class="form-label">
-                    Foto principal
-                </label>
+                <label asp-for="Foto" class="form-label">Foto principal</label>
 
                 @if (!string.IsNullOrWhiteSpace(Model.FotoActual))
                 {
                     <div class="mb-3">
                         <img src="@Model.FotoActual" alt="Fotografía actual de la receta" class="img-fluid rounded"
                              style="max-height: 200px; object-fit: cover;" />
-
                         <p class="text-muted small mt-2">
                             Si no seleccionás otra imagen, se conservará la misma
                         </p>
@@ -79,14 +75,13 @@
                 }
 
                 <input asp-for="Foto" class="form-control" type="file" accept=".jpg,.jpeg,.png" />
-
                 <span asp-validation-for="Foto" class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
                 <label asp-for="CategoriaID" class="form-label">Categoría</label>
-                <select asp-for="CategoriaID" class="form-select" asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
-                            ViewBag.Categorias, "ID", "Nombre"))" required>
+                <select asp-for="CategoriaID" class="form-select"
+                        asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(ViewBag.Categorias, "ID", "Nombre"))" required>
                     <option value="">-- Seleccione una categoría --</option>
                 </select>
                 <span asp-validation-for="CategoriaID" class="text-danger small"></span>
@@ -97,37 +92,17 @@
             <h5 class="mb-3">Ingredientes</h5>
 
             <div class="mb-3">
-                <label for="miBuscador" class="form-label">
-                    Buscar ingrediente
-                </label>
-
-                <select id="miBuscador" class="form-select">
-                    <option value="">Buscar ingrediente...</option>
-
-                    @foreach (var ing in Model.Ingredientes_Basicos)
-                    {
-                        <option value="@ing.ID" data-src="@(ing.ImagenDatos != null
-                            ? Url.Action("Ingrediente", "Imagenes", new { id = ing.ID })
-                            : Url.Content("~/imagenes/" + ing.ImagenDeIngrediente))"
-                                data-unidad="@ing.unidadDeMedida">
-                            @ing.nombre
-                        </option>
-                    }
-                </select>
+                <label for="miBuscador" class="form-label">Buscar ingrediente</label>
+                <select id="miBuscador" class="form-select"></select>
             </div>
 
             <div class="mb-3">
                 <label for="cantidadIngrediente" class="form-label">Cantidad</label>
-
                 <div class="input-group">
-                    <input type="number" id="cantidadIngrediente" class="form-control" min="0.01" step="any"
-                           placeholder="Ej. 500" />
-
-                    <span class="input-group-text" id="unidadIngrediente">
-                        Unidad
-                    </span>
+                    <input type="number" id="cantidadIngrediente" class="form-control"
+                           min="0.01" step="any" placeholder="Ej. 500" />
+                    <span class="input-group-text" id="unidadIngrediente">Unidad</span>
                 </div>
-
                 <div id="errorIngrediente" class="text-danger small mt-1"></div>
             </div>
 
@@ -138,57 +113,36 @@
             <h6>Ingredientes agregados</h6>
 
             <div id="listaIngredientes" class="list-group mb-3">
-
                 @for (int i = 0; i < Model.Ingredientes.Count; i++)
                 {
                     var ingrediente = Model.Ingredientes[i];
 
-                    var basico = Model.Ingredientes_Basicos
-                        .FirstOrDefault(x =>
-                            x.ID == ingrediente.IngredienteID);
-
-                    <div class="list-group-item d-flex
-                        justify-content-between
-                        align-items-center gap-2" data-ingrediente-id="@ingrediente.IngredienteID">
+                    <div class="list-group-item d-flex justify-content-between align-items-center gap-2"
+                         data-ingrediente-id="@ingrediente.IngredienteID">
 
                         <div>
-                            <strong>
-                                @(basico?.nombre ?? ingrediente.Nombre
-                                  ?? "Ingrediente")
-                            </strong>
-
-                            <span class="text-muted">
-                                — @ingrediente.Cantidad
-                                @(basico?.unidadDeMedida ?? "")
-                            </span>
+                            <strong>@ingrediente.Nombre</strong>
+                            <span class="text-muted">— @ingrediente.Cantidad</span>
                         </div>
 
                         <div class="datos-ingrediente">
                             <input type="hidden" name="Ingredientes[@i].IngredienteID" value="@ingrediente.IngredienteID" />
-
-                            <input type="hidden" name="Ingredientes[@i].Cantidad" value="@ingrediente.Cantidad.ToString(
-                                       System.Globalization.CultureInfo.InvariantCulture)" />
+                            <input type="hidden" name="Ingredientes[@i].Cantidad"
+                                   value="@ingrediente.Cantidad.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
                         </div>
 
-                        <button type="button" class="btn btn-sm btn-outline-danger btn-quitar">
-                            Quitar
-                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-quitar">Quitar</button>
                     </div>
                 }
             </div>
 
             <span asp-validation-for="Ingredientes" class="text-danger small d-block mb-3"></span>
-
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <button type="submit" class="btn boton-marron w-100 mt-2">
-                Guardar Receta
-            </button>
+            <button type="submit" class="btn boton-marron w-100 mt-2">Guardar Receta</button>
         </form>
     </div>
 </div>
-
-
 
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 
@@ -203,60 +157,57 @@
         const botonAgregar = document.getElementById("btnAgregarIngrediente");
         const formulario = document.getElementById("formCrearReceta");
 
+        let ingredienteSeleccionado = null;
+
         const tomSelect = new TomSelect(buscador, {
             maxItems: 1,
             create: false,
-            placeholder: "Buscar ingrediente...",
-
+            valueField: "id",
+            labelField: "text",
+            searchField: "text",
+            placeholder: "Escribí para buscar un ingrediente...",
+            shouldLoad: function (query) {
+                return query.length >= 2;
+            },
+            load: function (query, callback) {
+                fetch("/Recetas/BuscarIngredientes?termino=" + encodeURIComponent(query))
+                    .then(function (r) { return r.json(); })
+                    .then(function (datos) { callback(datos); })
+                    .catch(function () { callback(); });
+            },
             render: {
                 option: function (data, escape) {
-                    const imagen = data.src
-                        ? `<img src="${escape(data.src)}"
-                            class="ts-img"
-                            alt="">`
-                        : "";
-
-                    return `<div>${imagen}${escape(data.text)}</div>`;
+                    return `<div>${escape(data.text)}</div>`;
                 },
-
                 item: function (data, escape) {
-                    const imagen = data.src
-                        ? `<img src="${escape(data.src)}"
-                            class="ts-img"
-                            alt="">`
-                        : "";
-
-                    return `<div>${imagen}${escape(data.text)}</div>`;
+                    return `<div>${escape(data.text)}</div>`;
+                },
+                no_results: function () {
+                    return `<div class="no-results">Sin resultados. Probá otro término.</div>`;
                 }
             },
-
             onChange: function (valor) {
-                const opcion = buscador.querySelector(
-                    `option[value="${valor}"]`
-                );
-
-                unidad.textContent =
-                    opcion?.dataset.unidad || "Unidad";
-
                 error.textContent = "";
+                if (!valor) {
+                    ingredienteSeleccionado = null;
+                    unidad.textContent = "Unidad";
+                    return;
+                }
+                const opcionData = tomSelect.options[valor];
+                if (opcionData) {
+                    ingredienteSeleccionado = opcionData;
+                    const match = opcionData.text.match(/\(([^)]+)\)$/);
+                    unidad.textContent = match ? match[1] : "Unidad";
+                }
             }
         });
 
         function reindexarIngredientes() {
-            const filas = lista.querySelectorAll(
-                "[data-ingrediente-id]"
-            );
-
+            const filas = lista.querySelectorAll("[data-ingrediente-id]");
             filas.forEach(function (fila, indice) {
-                const inputs = fila.querySelectorAll(
-                    ".datos-ingrediente input"
-                );
-
-                inputs[0].name =
-                    `Ingredientes[${indice}].IngredienteID`;
-
-                inputs[1].name =
-                    `Ingredientes[${indice}].Cantidad`;
+                const inputs = fila.querySelectorAll(".datos-ingrediente input");
+                inputs[0].name = `Ingredientes[${indice}].IngredienteID`;
+                inputs[1].name = `Ingredientes[${indice}].Cantidad`;
             });
         }
 
@@ -267,15 +218,12 @@
             const valorCantidad = Number(cantidad.value);
 
             if (!id) {
-                error.textContent =
-                    "Seleccioná un ingrediente.";
+                error.textContent = "Seleccioná un ingrediente.";
                 return;
             }
 
-            if (!Number.isFinite(valorCantidad) ||
-                valorCantidad <= 0) {
-                error.textContent =
-                    "Ingresá una cantidad mayor a cero.";
+            if (!Number.isFinite(valorCantidad) || valorCantidad <= 0) {
+                error.textContent = "Ingresá una cantidad mayor a cero.";
                 return;
             }
 
@@ -284,35 +232,24 @@
             ).some(fila => fila.dataset.ingredienteId === id);
 
             if (repetido) {
-                error.textContent =
-                    "Este ingrediente ya está agregado.";
+                error.textContent = "Este ingrediente ya está agregado.";
                 return;
             }
 
-            const opcion = buscador.querySelector(
-                `option[value="${id}"]`
-            );
-
-            const nombre = opcion?.textContent.trim() || "Ingrediente";
-            const nombreUnidad = opcion?.dataset.unidad || "";
+            const nombre = ingredienteSeleccionado?.text?.replace(/\s*\([^)]*\)$/, "").trim() || "Ingrediente";
+            const match = ingredienteSeleccionado?.text?.match(/\(([^)]+)\)$/);
+            const nombreUnidad = match ? match[1] : "";
 
             const fila = document.createElement("div");
-            fila.className =
-                "list-group-item d-flex justify-content-between " +
-                "align-items-center gap-2";
-
+            fila.className = "list-group-item d-flex justify-content-between align-items-center gap-2";
             fila.dataset.ingredienteId = id;
 
             const descripcion = document.createElement("div");
-
             const titulo = document.createElement("strong");
             titulo.textContent = nombre;
-
             const detalle = document.createElement("span");
             detalle.className = "text-muted";
-            detalle.textContent =
-                ` — ${valorCantidad} ${nombreUnidad}`;
-
+            detalle.textContent = ` — ${valorCantidad} ${nombreUnidad}`;
             descripcion.append(titulo, detalle);
 
             const datos = document.createElement("div");
@@ -330,42 +267,31 @@
 
             const quitar = document.createElement("button");
             quitar.type = "button";
-            quitar.className =
-                "btn btn-sm btn-outline-danger btn-quitar";
+            quitar.className = "btn btn-sm btn-outline-danger btn-quitar";
             quitar.textContent = "Quitar";
 
             fila.append(descripcion, datos, quitar);
             lista.appendChild(fila);
 
             reindexarIngredientes();
-
             tomSelect.clear();
             cantidad.value = "";
             unidad.textContent = "Unidad";
         }
 
-        botonAgregar.addEventListener(
-            "click",
-            agregarIngrediente
-        );
+        botonAgregar.addEventListener("click", agregarIngrediente);
 
         lista.addEventListener("click", function (evento) {
             const boton = evento.target.closest(".btn-quitar");
-
             if (!boton) return;
-
             boton.closest("[data-ingrediente-id]").remove();
             reindexarIngredientes();
         });
 
         formulario.addEventListener("submit", function (evento) {
-            if (lista.querySelectorAll(
-                "[data-ingrediente-id]"
-            ).length === 0) {
+            if (lista.querySelectorAll("[data-ingrediente-id]").length === 0) {
                 evento.preventDefault();
-
-                error.textContent =
-                    "Agregá al menos un ingrediente a la receta.";
+                error.textContent = "Agregá al menos un ingrediente a la receta.";
             }
         });
 

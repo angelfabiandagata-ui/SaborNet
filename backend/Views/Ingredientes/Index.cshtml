@@ -1,57 +1,564 @@
-@model IEnumerable<backend.Models.Ingrediente>
-
 
 @{
-    ViewData["Title"] = "Ingredientes";
+    ViewData["Title"] = "Gestión de ingredientes";
 }
+
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Lista de Ingredientes</h2>
 
-        <a asp-action="Crear" asp-controller="Ingredientes"
-           class="btn boton-marron">
-           <i class="fa-solid fa-plus"></i> Crear
-        </a>
-    </div>
+    <div id="appIngredientes" v-cloak>
 
-    @if (Model != null && Model.Any())
-    {
-        <div class="row">
-            @foreach (var ingrediente in Model ?? Enumerable.Empty<backend.Models.Ingrediente>())
+        @* El token solo se necesita para las operaciones administrativas. *@
+        @if (User.IsInRole("Administrador"))
+        {
+            <div id="tokenIngredientes" class="d-none">
+                @Html.AntiForgeryToken()
+            </div>
+        }
+
+        <!-- ENCABEZADO -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Gestión de ingredientes</h2>
+
+            @if (User.IsInRole("Administrador"))
             {
-                <div class="col-md-4 mb-3">
-                    <div class="card p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="flex-grow-1 me-3">
-                                <h5 class="mb-1">@ingrediente.nombre</h5>
-                                <p class="text-muted mb-2">Unidad: @ingrediente.unidadDeMedida</p>
-                                <a asp-controller="Ingredientes" asp-action="Editar" asp-route-id="@ingrediente.ID"
-                                   class="btn boton-marron btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </div>
-                            <div>
-                                @if (ingrediente.ImagenDatos != null)
-                                {
-                                    <img src="/Imagenes/Ingrediente/@ingrediente.ID" alt="@ingrediente.nombre"
-                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
-                                         class="border border-2" />
-                                }
-                                else if (!string.IsNullOrEmpty(ingrediente.ImagenDeIngrediente))
-                                {
-                                    <img src="/imagenes/@ingrediente.ImagenDeIngrediente" alt="@ingrediente.nombre"
-                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
-                                         class="border border-2" />
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <button type="button"
+                        class="btn boton-marron"
+                        v-on:click="abrirCrear">
+                    <i class="fa-solid fa-plus"></i>
+                    Nuevo ingrediente
+                </button>
             }
         </div>
-    }
-    else
-    {
-        <p class="text-muted">No hay ingredientes cargados todavía. ¡Agregá el primero!</p>
-    }
+
+        <!-- MENSAJES -->
+        <div v-if="mensaje"
+             class="alert alert-success">
+            {{ mensaje }}
+        </div>
+
+        <div v-if="error"
+             class="alert alert-danger">
+            {{ error }}
+        </div>
+
+        <!-- BUSCADOR -->
+        <div class="mb-4">
+            <input type="text"
+                   class="form-control"
+                   placeholder="Buscar ingrediente..."
+                   v-model="buscar"
+                   v-on:input="buscarIngredientes" />
+        </div>
+
+        @if (User.IsInRole("Administrador"))
+        {
+        <!-- FORMULARIO CREAR / EDITAR -->
+        <div v-if="mostrarFormulario" class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h4 class="mb-3">
+                    {{ editando ? 'Editar ingrediente' : 'Nuevo ingrediente' }}
+                </h4>
+
+                <form v-on:submit.prevent="guardarIngrediente">
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+
+                        <input type="text"
+                               class="form-control"
+                               v-model="formulario.nombre"
+                               maxlength="100"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Unidad de medida</label>
+
+                        <input type="text"
+                               class="form-control"
+                               v-model="formulario.unidadDeMedida"
+                               maxlength="50"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Imagen {{ editando ? '(opcional)' : '(obligatoria)' }}
+                        </label>
+
+                        <input type="file"
+                               ref="inputImagen"
+                               class="form-control"
+                               accept=".jpg,.jpeg,.png"
+                               v-on:change="seleccionarImagen"
+                               :required="!editando" />
+
+                        <small class="text-muted">
+                            Formatos JPG o PNG. Máximo 5 MB.
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+
+                        <button type="submit"
+                                class="btn boton-marron"
+                                :disabled="guardando">
+                            {{ guardando ? 'Guardando...' : 'Guardar ingrediente' }}
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-secondary"
+                                v-on:click="cerrarFormulario"
+                                :disabled="guardando">
+                            Cancelar
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+        }
+
+        <!-- CARGANDO -->
+        <div v-if="cargando" class="text-center py-4">
+            Cargando ingredientes...
+        </div>
+
+        <!-- LISTADO -->
+        <div v-if="!cargando">
+
+            <div v-if="ingredientes.length === 0" class="alert alert-info">
+                No se encontraron ingredientes.
+            </div>
+
+            <div class="row">
+
+                <div v-for="ingrediente in ingredientes" :key="ingrediente.id" class="col-md-4 mb-3">
+
+                    <div class="card p-3 h-100">
+
+                        <!-- IMAGEN DEL INGREDIENTE -->
+                        <img v-if="ingrediente.imagenUrl" :src="ingrediente.imagenUrl + '?v=' + versionImagenes"
+                             :alt="ingrediente.nombre" class="card-img-top mb-3"
+                             style="height: 180px; object-fit: contain;" />
+
+                        <!-- NOMBRE -->
+                        <h5>{{ ingrediente.nombre }}</h5>
+
+                        <p class="text-muted">
+                            Unidad: {{ ingrediente.unidadDeMedida }}
+                        </p>
+
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <div class="d-flex gap-2 mt-auto">
+                                <button type="button" class="btn btn-warning btn-sm"
+                                        v-on:click="abrirEditar(ingrediente.id)">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Editar
+                                </button>
+
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        v-on:click="eliminarIngrediente(ingrediente.id)">
+                                    <i class="fa-solid fa-trash"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- PAGINACIÓN -->
+            <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        v-on:click="cambiarPagina(pagina - 1)"
+                        :disabled="pagina <= 1">
+                    Anterior
+                </button>
+
+                <span>
+                    Página {{ pagina }} de {{ totalPaginas }}
+                </span>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        v-on:click="cambiarPagina(pagina + 1)"
+                        :disabled="pagina >= totalPaginas">
+                    Siguiente
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
+
+<style>
+    [v-cloak] {
+        display: none;
+    }
+</style>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+
+        data() {
+            return {
+                ingredientes: [],
+                buscar: "",
+                pagina: 1,
+                totalPaginas: 1,
+                versionImagenes: 0,
+
+                cargando: false,
+                guardando: false,
+
+                mensaje: "",
+                error: "",
+
+                mostrarFormulario: false,
+                editando: false,
+
+                formulario: {
+                    id: null,
+                    nombre: "",
+                    unidadDeMedida: "",
+                    imagen: null
+                },
+
+                busquedaTimer: null,
+                solicitudActual: 0
+            };
+        },
+
+        methods: {
+
+            obtenerToken() {
+                return document.querySelector(
+                    '#tokenIngredientes input[name="__RequestVerificationToken"]'
+                ).value;
+            },
+
+            async leerRespuesta(respuesta) {
+                const tipo = respuesta.headers.get("content-type") || "";
+
+                if (!tipo.includes("application/json")) {
+                    throw new Error(
+                        "El servidor no devolvió JSON. Revisá la autenticación o el controlador."
+                    );
+                }
+
+                const datos = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    throw new Error(
+                        datos.mensaje || "Ocurrió un error."
+                    );
+                }
+
+                return datos;
+            },
+
+            async cargarIngredientes() {
+
+                const solicitud = ++this.solicitudActual;
+
+                this.cargando = true;
+                this.error = "";
+
+                try {
+                    const parametros = new URLSearchParams({
+                        pagina: this.pagina,
+                        buscar: this.buscar
+                    });
+
+                    const respuesta = await fetch(
+                        "/Ingredientes/Listar?" + parametros
+                    );
+
+                    const datos = await this.leerRespuesta(respuesta);
+
+                    if (solicitud !== this.solicitudActual) {
+                        return;
+                    }
+
+                    this.ingredientes = datos.items;
+                    this.totalPaginas = Math.max(
+                        1, datos.totalPaginas
+                    );
+
+                } catch (error) {
+
+                    if (solicitud !== this.solicitudActual) {
+                        return;
+                    }
+
+                    this.error = error.message;
+
+                } finally {
+
+                    if (solicitud === this.solicitudActual) {
+                        this.cargando = false;
+                    }
+                }
+            },
+
+            buscarIngredientes() {
+
+                clearTimeout(this.busquedaTimer);
+
+                this.busquedaTimer = setTimeout(() => {
+                    this.pagina = 1;
+                    this.cargarIngredientes();
+                }, 300);
+            },
+
+            cambiarPagina(nuevaPagina) {
+
+                if (nuevaPagina < 1 ||
+                    nuevaPagina > this.totalPaginas) {
+                    return;
+                }
+
+                this.pagina = nuevaPagina;
+                this.cargarIngredientes();
+            },
+
+            limpiarFormulario() {
+
+                this.formulario = {
+                    id: null,
+                    nombre: "",
+                    unidadDeMedida: "",
+                    imagen: null
+                };
+
+                if (this.$refs.inputImagen) {
+                    this.$refs.inputImagen.value = "";
+                }
+            },
+
+            abrirCrear() {
+
+                this.error = "";
+                this.mensaje = "";
+
+                this.editando = false;
+                this.limpiarFormulario();
+                this.mostrarFormulario = true;
+            },
+
+            async abrirEditar(id) {
+
+                this.error = "";
+                this.mensaje = "";
+
+                try {
+                    const respuesta = await fetch(
+                        "/Ingredientes/Obtener/" + id
+                    );
+
+                    const ingrediente =
+                        await this.leerRespuesta(respuesta);
+
+                    this.editando = true;
+
+                    this.formulario = {
+                        id: ingrediente.id,
+                        nombre: ingrediente.nombre,
+                        unidadDeMedida: ingrediente.unidadDeMedida,
+                        imagen: null
+                    };
+
+                    this.mostrarFormulario = true;
+
+                    await this.$nextTick();
+
+                    if (this.$refs.inputImagen) {
+                        this.$refs.inputImagen.value = "";
+                    }
+
+                } catch (error) {
+                    this.error = error.message;
+                }
+            },
+
+            cerrarFormulario() {
+                this.mostrarFormulario = false;
+                this.editando = false;
+                this.limpiarFormulario();
+            },
+
+            seleccionarImagen(evento) {
+
+                const archivo = evento.target.files[0];
+
+                if (!archivo) {
+                    this.formulario.imagen = null;
+                    return;
+                }
+
+                if (archivo.size > 5 * 1024 * 1024) {
+                    this.error = "La imagen no puede superar los 5 MB.";
+                    evento.target.value = "";
+                    this.formulario.imagen = null;
+                    return;
+                }
+
+                const extensiones = [".jpg", ".jpeg", ".png"];
+                const nombre = archivo.name.toLowerCase();
+
+                if (!extensiones.some(ext => nombre.endsWith(ext))) {
+                    this.error = "Seleccioná una imagen JPG o PNG.";
+                    evento.target.value = "";
+                    this.formulario.imagen = null;
+                    return;
+                }
+
+                this.error = "";
+                this.formulario.imagen = archivo;
+            },
+
+            async guardarIngrediente() {
+
+                this.error = "";
+                this.mensaje = "";
+                this.guardando = true;
+
+                try {
+                    const datos = new FormData();
+
+                    datos.append(
+                        "nombre",
+                        this.formulario.nombre
+                    );
+
+                    datos.append(
+                        "unidadDeMedida",
+                        this.formulario.unidadDeMedida
+                    );
+
+                    let url;
+
+                    if (this.editando) {
+
+                        url = "/Ingredientes/EditarAjax/" +
+                            this.formulario.id;
+
+                        if (this.formulario.imagen) {
+                            datos.append(
+                                "imagenNueva",
+                                this.formulario.imagen
+                            );
+                        }
+
+                    } else {
+
+                        url = "/Ingredientes/CrearAjax";
+
+                        if (!this.formulario.imagen) {
+                            throw new Error(
+                                "Seleccioná una imagen."
+                            );
+                        }
+
+                        datos.append(
+                            "imagenDeIngrediente",
+                            this.formulario.imagen
+                        );
+                    }
+
+                    const respuesta = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "RequestVerificationToken": this.obtenerToken()
+                        },
+                        body: datos
+                    });
+
+                    const resultado =
+                        await this.leerRespuesta(respuesta);
+
+                    this.mensaje = resultado.mensaje;
+
+                    this.cerrarFormulario();
+
+                    this.versionImagenes = Date.now();
+
+                    this.pagina = 1;
+                    await this.cargarIngredientes();
+
+                } catch (error) {
+
+                    this.error = error.message;
+
+                } finally {
+
+                    this.guardando = false;
+                }
+            },
+
+            async eliminarIngrediente(id) {
+
+                if (!confirm(
+                    "¿Seguro que querés eliminar este ingrediente?"
+                )) {
+                    return;
+                }
+
+                this.error = "";
+                this.mensaje = "";
+
+                try {
+                    const respuesta = await fetch(
+                        "/Ingredientes/Eliminar/" + id,
+                        {
+                            method: "POST",
+                            headers: {
+                                "RequestVerificationToken": this.obtenerToken()
+                            }
+                        }
+                    );
+
+                    const resultado =
+                        await this.leerRespuesta(respuesta);
+
+                    this.mensaje = resultado.mensaje;
+
+                    await this.cargarIngredientes();
+
+                    if (this.ingredientes.length === 0 &&
+                        this.pagina > 1) {
+                        this.pagina--;
+                        await this.cargarIngredientes();
+                    }
+
+                } catch (error) {
+                    this.error = error.message;
+                }
+            }
+        },
+
+        mounted() {
+            this.cargarIngredientes();
+        }
+
+    }).mount("#appIngredientes");
+</script>
