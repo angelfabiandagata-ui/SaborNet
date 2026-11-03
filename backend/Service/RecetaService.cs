@@ -40,6 +40,35 @@ internal async Task<(List<Receta> recetas, int total)> ListarPaginado(
 
     return (recetas, total);
 }
+internal async Task<(List<Receta> recetas, int total)> ListarMisRecetasPaginado(
+    int usuarioId,
+    int pagina,
+    int tamano,
+    string? termino = null)
+{
+    var consulta = _db.Set<Receta>()
+        .AsNoTracking()
+        .Where(r => r.UsuarioID == usuarioId);
+
+    if (!string.IsNullOrWhiteSpace(termino))
+    {
+        var patron = $"%{termino.Trim()}%";
+
+        consulta = consulta.Where(r =>
+            EF.Functions.ILike(r.Titulo, patron) ||
+            EF.Functions.ILike(r.Descripcion, patron));
+    }
+
+    int total = await consulta.CountAsync();
+
+    var recetas = await consulta
+        .OrderByDescending(r => r.ID)
+        .Skip((pagina - 1) * tamano)
+        .Take(tamano)
+        .ToListAsync();
+
+    return (recetas, total);
+}
 
 internal async Task<(List<Receta> recetas, int total)> ListarPopularesPaginado(
     int pagina,

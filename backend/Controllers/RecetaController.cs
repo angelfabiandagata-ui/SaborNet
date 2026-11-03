@@ -483,4 +483,37 @@ public async Task<IActionResult> Crear()
 
         return (memoria.ToArray(), tipo);
     }
+    // GET: /Recetas/MisRecetas
+[Authorize]
+[HttpGet]
+public async Task<IActionResult> MisRecetas(
+    string? termino,
+    int pagina = 1)
+{
+    var usuarioId = ObtenerUsuarioId();
+
+    if (usuarioId == null)
+        return Challenge();
+
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
+
+    var (recetas, total) =
+        await _servicio.ListarMisRecetasPaginado(
+            usuarioId.Value,
+            pagina,
+            tamano,
+            termino);
+
+    ViewBag.Termino = termino;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
+
+    ViewBag.Promedios =
+        await _valoracionServicio.ObtenerPromedios(
+            recetas.Select(r => r.ID));
+
+    return View(recetas);
+}
 }

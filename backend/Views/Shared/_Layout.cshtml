@@ -1,5 +1,4 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -22,7 +21,8 @@
           href="~/backend.styles.css"
           asp-append-version="true" />
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
 <body>
@@ -36,7 +36,7 @@
                 <a class="navbar-brand fw-medium text-white fs-4"
                    asp-controller="Home"
                    asp-action="Index">
-                    Sabor<b>Net</b>
+                    Sabor<b>Net.</b>
                 </a>
 
                 <!-- MENÚ RESPONSIVE -->
@@ -73,41 +73,38 @@
                             </a>
                         </li>
 
+
                         @if (User.IsInRole("Administrador"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-white"
-                                asp-controller="Categorias"
-                                asp-action="Index">
-                                    Categorías
+                            <!-- ADMINISTRACIÓN -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white"
+                                   href="#"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    Administración
                                 </a>
-                            </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link text-white"
-                                asp-controller="Usuarios"
-                                asp-action="Index">
-                                    Usuarios
-                                </a>
-                            </li>
-                        }
+                                <ul class="dropdown-menu">
 
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-white"
-                                   asp-controller="Recetas"
-                                   asp-action="Index">
-                                    Recetas
-                                </a>
-                            </li>
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Categorias"
+                                           asp-action="Index">
+                                            Categorías
+                                        </a>
+                                    </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link text-white"
-                                   asp-controller="Ingredientes"
-                                   asp-action="Index">
-                                    Ingredientes
-                                </a>
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Usuarios"
+                                           asp-action="Index">
+                                            Usuarios
+                                        </a>
+                                    </li>
+
+                                </ul>
                             </li>
                         }
 
@@ -137,31 +134,71 @@
                         </div>
                     </form>
 
-                    <!-- USUARIO -->
-                    <div class="d-flex align-items-center gap-2">
 
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-    
-                            
+<!-- USUARIO -->
+<div class="d-flex align-items-center gap-2">
 
-                            <a class="btn btn-outline-light txt-nowrap"
-                               asp-controller="Usuarios"
-                               asp-action="MiPerfil">
-                                @User.Identity.Name
-                            </a>
-                        }
-                        else
-                        {
-                            <!-- INICIAR SESIÓN -->
-                            <a class="btn btn-outline-light text-nowrap"
-                               asp-controller="Login"
-                               asp-action="Login">
-                                Iniciar Sesión
-                            </a>
-                        }
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="dropdown">
 
-                    </div>
+            <a class="btn btn-outline-light dropdown-toggle text-nowrap"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+
+                @User.Identity.Name
+
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-controller="Usuarios"
+                       asp-action="MiPerfil">
+                        Mi perfil
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-controller="Recetas"
+                       asp-action="MisRecetas">
+                        Mis recetas
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-controller="Recetas"
+                       asp-action="Crear">
+                        Publicar receta
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-controller="Ingredientes"
+                       asp-action="Index">
+                        Ingredientes
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+    }
+    else
+    {
+        <a class="btn btn-outline-light text-nowrap"
+           asp-controller="Login"
+           asp-action="Login">
+            Iniciar Sesión
+        </a>
+    }
+
+</div>
 
                 </div>
             </div>
@@ -198,3 +235,4 @@
 
 </body>
 </html>
+```
