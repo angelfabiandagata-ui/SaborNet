@@ -15,22 +15,53 @@ public class RecetaService : ServicioBase<Receta>
         _db = db;
     }
 
-    internal async Task<(List<Receta> recetas, int total)> ListarPaginado(
-        int pagina,
-        int tamano)
+internal async Task<(List<Receta> recetas, int total)> ListarPaginado(
+    int pagina,
+    int tamano,
+    string? termino = null)
+{
+    var consulta = _db.Set<Receta>().AsNoTracking();
+
+    if (!string.IsNullOrWhiteSpace(termino))
     {
-        var consulta = _db.Set<Receta>().AsNoTracking();
-
-        int total = await consulta.CountAsync();
-
-        var recetas = await consulta
-            .OrderByDescending(r => r.ID)
-            .Skip((pagina - 1) * tamano)
-            .Take(tamano)
-            .ToListAsync();
-
-        return (recetas, total);
+        var patron = $"%{termino.Trim()}%";
+        consulta = consulta.Where(r =>
+            EF.Functions.ILike(r.Titulo, patron) ||
+            EF.Functions.ILike(r.Descripcion, patron));
     }
+
+    int total = await consulta.CountAsync();
+
+    var recetas = await consulta
+        .OrderByDescending(r => r.ID)
+        .Skip((pagina - 1) * tamano)
+        .Take(tamano)
+        .ToListAsync();
+
+    return (recetas, total);
+}
+
+internal async Task<(List<Receta> recetas, int total)> ListarPopularesPaginado(
+    int pagina,
+    int tamano)
+{
+    var consulta = _db.Set<Receta>().AsNoTracking();
+    var valoraciones = _db.Set<ValoracionReceta>();
+
+    int total = await consulta.CountAsync();
+
+    var recetas = await consulta
+        .OrderByDescending(r => valoraciones
+            .Where(v => v.RecetaID == r.ID)
+            .Average(v => (double?)v.Puntaje) ?? 0)
+        .ThenByDescending(r => valoraciones.Count(v => v.RecetaID == r.ID))
+        .ThenByDescending(r => r.FechaDeLaReceta)
+        .Skip((pagina - 1) * tamano)
+        .Take(tamano)
+        .ToListAsync();
+
+    return (recetas, total);
+}
 
     public async Task<List<Receta>> MasRecientes(DateTime? ultimoVisto)
     {

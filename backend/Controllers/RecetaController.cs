@@ -30,42 +30,42 @@ public class RecetasController : Controller
         _valoracionComentarioServicio = valoracionComentarioServicio;
     }
 
+// GET: /Recetas
+[HttpGet]
+public async Task<IActionResult> Index(string? termino, int pagina = 1)
+{
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
 
-    // GET: /Recetas
-    [HttpGet]
-    public async Task<IActionResult> Index(int pagina = 1)
-    {
-        const int tamano = 10;
-        pagina = Math.Max(1, pagina);
+    var (recetas, total) =
+        await _servicio.ListarPaginado(pagina, tamano, termino);
 
-        var (recetas, total) =
-            await _servicio.ListarPaginado(pagina, tamano);
-
-        ViewBag.PaginaActual = pagina;
-        ViewBag.TotalPaginas =
-            (int)Math.Ceiling((double)total / tamano);
-        ViewBag.Promedios = await _valoracionServicio.ObtenerPromedios(
+    ViewBag.Termino = termino;
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
+    ViewBag.Promedios = await _valoracionServicio.ObtenerPromedios(
         recetas.Select(r => r.ID));
 
-        return View(recetas);
-    }
+    return View(recetas);
+}
 
-    // GET: /Recetas/MasPopulares
-    [HttpGet]
-    public async Task<IActionResult> MasPopulares(int pagina = 1)
-    {
-        const int tamano = 10;
-        pagina = Math.Max(1, pagina);
+// GET: /Recetas/MasPopulares
+[HttpGet]
+public async Task<IActionResult> MasPopulares(int pagina = 1)
+{
+    const int tamano = 10;
+    pagina = Math.Max(1, pagina);
 
-        var (recetas, total) =
-            await _servicio.ListarPaginado(pagina, tamano);
+    var (recetas, total) =
+        await _servicio.ListarPopularesPaginado(pagina, tamano);
 
-        ViewBag.PaginaActual = pagina;
-        ViewBag.TotalPaginas =
-            (int)Math.Ceiling((double)total / tamano);
+    ViewBag.PaginaActual = pagina;
+    ViewBag.TotalPaginas =
+        (int)Math.Ceiling((double)total / tamano);
 
-        return View(recetas);
-    }
+    return View(recetas);
+}
 
     // GET: /Recetas/MasRecientes?ultimoVisto=2026-01-01T00:00:00
     [HttpGet]
