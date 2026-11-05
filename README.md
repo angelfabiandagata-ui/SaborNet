@@ -60,22 +60,3 @@ La aplicación estará disponible en `http://localhost:5133` o `https://localhos
 - `/api/ingredientes`: permite consultar ingredientes; las operaciones de escritura requieren un token JWT de un usuario Administrador.
 
 La web utiliza sus propias pantallas MVC y no consume esta API como cliente. No se encontró una colección de Postman, Bruno o Insomnia en el repositorio.
-
-## Matriz de evidencias
-
-| Requerimiento | Estado | Código / evidencia |
-|---|---|---|
-| Modelo con al menos 6 tablas y relaciones 1:N y N:M | ✅ Cumplido | [AppDbContext.cs](backend/data/AppDbContext.cs), [DB.sql](backend/Database/DB.sql) y [diagrama DER](docs/der.png). `RecetaIngredientes` relaciona recetas e ingredientes. |
-| Login, roles y avatar | ✅ Cumplido | [LoginController.cs](backend/Controllers/LoginController.cs), [UsuarioController.cs](backend/Controllers/UsuarioController.cs) y [Usuario.cs](backend/Models/Usuario.cs). |
-| Carga y almacenamiento de archivos, además del avatar | ✅ Cumplido | [RecetaController.cs](backend/Controllers/RecetaController.cs), [Ingredientes.cs](backend/Controllers/Ingredientes.cs) e [ImagenesController.cs](backend/Controllers/ImagenesController.cs). Se guardan imágenes de recetas e ingredientes. |
-| ABM completo con Vue y AJAX | ✅ Cumplido | [Ingredientes/Index.cshtml](backend/Views/Ingredientes/Index.cshtml) y [Ingredientes.cs](backend/Controllers/Ingredientes.cs). |
-| Paginado del lado del servidor en los listados principales | ⚠️ Parcial | [RecetaController.cs](backend/Controllers/RecetaController.cs), [Ingredientes.cs](backend/Controllers/Ingredientes.cs) y [UsuarioController.cs](backend/Controllers/UsuarioController.cs) implementan paginado. Falta completar o revisar el listado de recetas recientes. |
-| Búsqueda asíncrona de entidades relacionadas | ✅ Cumplido | [RecetaController.cs](backend/Controllers/RecetaController.cs), [Recetas/Crear.cshtml](backend/Views/Recetas/Crear.cshtml) y [Recetas/Editar.cshtml](backend/Views/Recetas/Editar.cshtml). |
-| Web API autenticada con JWT | ⚠️ Parcial | [AuthController.cs](backend/Controllers/Api/AuthController.cs), [IngredientesController.cs](backend/Controllers/Api/IngredientesController.cs) y [JwtService.cs](backend/Services/JwtService.cs). Falta agregar la colección de pruebas de la API. |
-
-### Pendiente para la entrega
-
-- El script SQL crea el esquema, pero no carga datos de prueba; tampoco se incluyen credenciales de prueba por rol.
-- Agregar una colección de Postman, Bruno o Insomnia para probar la API con JWT.
-- Completar y verificar el paginado de recetas recientes.
-- Incorporar capturas, GIF o video de las funcionalidades; por ahora, el repositorio incluye el diagrama DER como evidencia visual.
