@@ -104,21 +104,24 @@ internal async Task<List<Receta>> ListarPopularesPaginado(
 
         if (cursor != null)
         {
-            consulta = consulta.Where(r => anterior
-                ? r.Promedio > cursor.Promedio ||
+            if (anterior)
+                consulta = consulta.Where(r =>
+                    r.Promedio > cursor.Promedio ||
                     (r.Promedio == cursor.Promedio &&
-                    (r.Cantidad > cursor.Cantidad ||
-                    (r.Cantidad == cursor.Cantidad &&
-                    (r.Receta.FechaDeLaReceta > cursor.FechaDeLaReceta ||
-                    (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
-                        r.Receta.ID > cursor.ID)))))
-                : r.Promedio < cursor.Promedio ||
+                     (r.Cantidad > cursor.Cantidad ||
+                      (r.Cantidad == cursor.Cantidad &&
+                       (r.Receta.FechaDeLaReceta > cursor.FechaDeLaReceta ||
+                        (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
+                         r.Receta.ID > cursor.ID))))));
+            else
+                consulta = consulta.Where(r =>
+                    r.Promedio < cursor.Promedio ||
                     (r.Promedio == cursor.Promedio &&
-                    (r.Cantidad < cursor.Cantidad ||
-                    (r.Cantidad == cursor.Cantidad &&
-                    (r.Receta.FechaDeLaReceta < cursor.FechaDeLaReceta ||
-                    (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
-                        r.Receta.ID < cursor.ID)))));
+                     (r.Cantidad < cursor.Cantidad ||
+                      (r.Cantidad == cursor.Cantidad &&
+                       (r.Receta.FechaDeLaReceta < cursor.FechaDeLaReceta ||
+                        (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
+                         r.Receta.ID < cursor.ID))))));
         }
     }
 
