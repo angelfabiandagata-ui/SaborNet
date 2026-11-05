@@ -21,8 +21,10 @@ public class HomeController : Controller
     }
     public async Task<IActionResult> Index()
     {
-        var (populares, _) = await _recetaServicio.ListarPopularesPaginado(1, 4);
-        var nuevas = (await _recetaServicio.MasRecientes(null)).Take(4).ToList();
+        var populares = (await _recetaServicio.ListarPopularesPaginado(null, 4))
+            .Take(4).ToList();
+        var nuevas = (await _recetaServicio.MasRecientes(null, 4))
+            .Take(4).ToList();
 
         var ids = populares.Select(r => r.ID)
             .Concat(nuevas.Select(r => r.ID))
