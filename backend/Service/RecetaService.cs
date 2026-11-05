@@ -118,7 +118,7 @@ internal async Task<List<Receta>> ListarPopularesPaginado(
                     (r.Cantidad == cursor.Cantidad &&
                     (r.Receta.FechaDeLaReceta < cursor.FechaDeLaReceta ||
                     (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
-                        r.Receta.ID < cursor.ID)))));
+                        r.Receta.ID < cursor.ID))))));
         }
     }
 
