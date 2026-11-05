@@ -52,11 +52,9 @@ El script de creación del esquema está en [`backend/Database/DB.sql`](backend/
    dotnet run
    ```
 
-La aplicación estará disponible en `http://localhost:5133` o `https://localhost:7153`.
+La aplicación estará disponible en `http://localhost:5133` .
 
 ## API con JWT
 
 - `POST /api/auth/login`: recibe email y contraseña y devuelve un token Bearer.
 - `/api/ingredientes`: permite consultar ingredientes; las operaciones de escritura requieren un token JWT de un usuario Administrador.
-
-La web utiliza sus propias pantallas MVC y no consume esta API como cliente. No se encontró una colección de Postman, Bruno o Insomnia en el repositorio.
