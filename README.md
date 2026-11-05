@@ -58,3 +58,16 @@ La aplicación estará disponible en `http://localhost:5133` .
 
 - `POST /api/auth/login`: recibe email y contraseña y devuelve un token Bearer.
 - `/api/ingredientes`: permite consultar ingredientes; las operaciones de escritura requieren un token JWT de un usuario Administrador.
+
+## Tabla de evidencias
+
+| Requerimiento mínimo | Estado | Enlace al código (método exacto) | Evidencia |
+| --- | --- | --- | --- |
+| 1. 4 tablas y relación 1:N | ✅ Cumplido | `DbSet` de las 8 tablas: [`AppDbContext.cs#L10`](backend/Data/AppDbContext.cs#L10) · Relaciones: [`OnModelCreating`](backend/Data/AppDbContext.cs#L23) | Diagrama DER: [`docs/der.png`](docs/der.png) (se muestra arriba en "Modelo de datos") |
+| 2. Login, roles y avatar | ✅ Cumplido | POST `/Login/Login`: [`LoginController.cs#L32`](backend/Controllers/LoginController.cs#L32) · Claim de rol: [`LoginController.cs#L61`](backend/Controllers/LoginController.cs#L61) · Subida avatar en registro: [`LoginController.cs#L80`](backend/Controllers/LoginController.cs#L80) · Cambio de rol: [`UsuarioController.cs#L234`](backend/Controllers/UsuarioController.cs#L234) | Captura pendiente: perfil con avatar |
+| 3. Manejo de archivos (extra) | ✅ Cumplido | Servir archivos guardados: [`ImagenesController.cs#L17`](backend/Controllers/ImagenesController.cs#L17) · POST de receta con imagen: [`RecetaController.cs#L211`](backend/Controllers/RecetaController.cs#L211) | Video: [Subir receta con imagen](docs/SubirReceta.mp4) |
+| 4. ABM en Vue.js + AJAX | ✅ Cumplido | App Vue (`createApp`): [`Views/Ingredientes/Index.cshtml#L218`](backend/Views/Ingredientes/Index.cshtml#L218) · Acciones AJAX del backend: [`Ingredientes.cs#L182`](backend/Controllers/Ingredientes.cs#L182), [`Ingredientes.cs#L323`](backend/Controllers/Ingredientes.cs#L323) | Video: [ABM de ingredientes en Vue](docs/ABM%20Ingrediente%20Vue.mp4) |
+| 5. Paginado por servidor | ✅ Cumplido | Paginado server-side: [`Api/IngredientesController.cs#L38`](backend/Controllers/Api/IngredientesController.cs#L38) (petición `GET /api/Ingredientes/?pagina=2`) | Video: [Paginado](docs/Paginado.mp4) |
+| 6. Selección asíncrona (AJAX) | ✅ Cumplido | Búsqueda de ingredientes por AJAX: [`RecetaController.cs#L181`](backend/Controllers/RecetaController.cs#L181) · Listado AJAX de ingredientes: [`Ingredientes.cs#L45`](backend/Controllers/Ingredientes.cs#L45) | Captura pendiente: búsqueda asíncrona en desplegable |
+| 7. Web API + JWT | ✅ Cumplido | Login API que emite el token: [`Api/AuthController.cs#L44`](backend/Controllers/Api/AuthController.cs#L44) · `[Authorize]` con rol sobre la API: [`Api/IngredientesController.cs#L131`](backend/Controllers/Api/IngredientesController.cs#L131) | Documento: [Pruebas desde PowerShell (PDF)](docs/Pruebas%20desde%20Powershell.pdf) · Captura pendiente: token Bearer en PowerShell/Postman |
+
