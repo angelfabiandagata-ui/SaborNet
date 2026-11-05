@@ -15,10 +15,11 @@ public class RecetaService : ServicioBase<Receta>
         _db = db;
     }
 
-internal async Task<(List<Receta> recetas, int total)> ListarPaginado(
-    int pagina,
+internal async Task<List<Receta>> ListarPaginado(
+    int? lastId,
     int tamano,
-    string? termino = null)
+    string? termino = null,
+    bool anterior = false)
 {
     var consulta = _db.Set<Receta>().AsNoTracking();
 
@@ -30,21 +31,23 @@ internal async Task<(List<Receta> recetas, int total)> ListarPaginado(
             EF.Functions.ILike(r.Descripcion, patron));
     }
 
-    int total = await consulta.CountAsync();
+    if (lastId.HasValue)
+        consulta = consulta.Where(r => anterior
+            ? r.ID > lastId.Value
+            : r.ID < lastId.Value);
 
-    var recetas = await consulta
-        .OrderByDescending(r => r.ID)
-        .Skip((pagina - 1) * tamano)
-        .Take(tamano)
+    return await (anterior
+        ? consulta.OrderBy(r => r.ID)
+        : consulta.OrderByDescending(r => r.ID))
+        .Take(tamano + 1)
         .ToListAsync();
-
-    return (recetas, total);
 }
-internal async Task<(List<Receta> recetas, int total)> ListarMisRecetasPaginado(
+internal async Task<List<Receta>> ListarMisRecetasPaginado(
     int usuarioId,
-    int pagina,
+    int? lastId,
     int tamano,
-    string? termino = null)
+    string? termino = null,
+    bool anterior = false)
 {
     var consulta = _db.Set<Receta>()
         .AsNoTracking()
@@ -59,70 +62,111 @@ internal async Task<(List<Receta> recetas, int total)> ListarMisRecetasPaginado(
             EF.Functions.ILike(r.Descripcion, patron));
     }
 
-    int total = await consulta.CountAsync();
+    if (lastId.HasValue)
+        consulta = consulta.Where(r => anterior
+            ? r.ID > lastId.Value
+            : r.ID < lastId.Value);
 
-    var recetas = await consulta
-        .OrderByDescending(r => r.ID)
-        .Skip((pagina - 1) * tamano)
-        .Take(tamano)
+    return await (anterior
+        ? consulta.OrderBy(r => r.ID)
+        : consulta.OrderByDescending(r => r.ID))
+        .Take(tamano + 1)
         .ToListAsync();
-
-    return (recetas, total);
 }
 
-internal async Task<(List<Receta> recetas, int total)> ListarPopularesPaginado(
-    int pagina,
-    int tamano)
+internal async Task<List<Receta>> ListarPopularesPaginado(
+    int? lastId,
+    int tamano,
+    bool anterior = false)
 {
-    var consulta = _db.Set<Receta>().AsNoTracking();
     var valoraciones = _db.Set<ValoracionReceta>();
-
-    int total = await consulta.CountAsync();
-
-    var recetas = await consulta
-        .OrderByDescending(r => valoraciones
+    var consulta = _db.Recetas.AsNoTracking().Select(r => new
+    {
+        Receta = r,
+        Promedio = valoraciones
             .Where(v => v.RecetaID == r.ID)
-            .Average(v => (double?)v.Puntaje) ?? 0)
-        .ThenByDescending(r => valoraciones.Count(v => v.RecetaID == r.ID))
-        .ThenByDescending(r => r.FechaDeLaReceta)
-        .Skip((pagina - 1) * tamano)
-        .Take(tamano)
-        .ToListAsync();
+            .Average(v => (double?)v.Puntaje) ?? 0,
+        Cantidad = valoraciones.Count(v => v.RecetaID == r.ID)
+    });
 
-    return (recetas, total);
+    if (lastId.HasValue)
+    {
+        var cursor = await consulta
+            .Where(r => r.Receta.ID == lastId.Value)
+            .Select(r => new
+            {
+                r.Promedio,
+                r.Cantidad,
+                r.Receta.FechaDeLaReceta,
+                r.Receta.ID
+            })
+            .FirstOrDefaultAsync();
+
+        if (cursor != null)
+        {
+            consulta = consulta.Where(r => anterior
+                ? r.Promedio > cursor.Promedio ||
+                    (r.Promedio == cursor.Promedio &&
+                    (r.Cantidad > cursor.Cantidad ||
+                    (r.Cantidad == cursor.Cantidad &&
+                    (r.Receta.FechaDeLaReceta > cursor.FechaDeLaReceta ||
+                    (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
+                        r.Receta.ID > cursor.ID)))))
+                : r.Promedio < cursor.Promedio ||
+                    (r.Promedio == cursor.Promedio &&
+                    (r.Cantidad < cursor.Cantidad ||
+                    (r.Cantidad == cursor.Cantidad &&
+                    (r.Receta.FechaDeLaReceta < cursor.FechaDeLaReceta ||
+                    (r.Receta.FechaDeLaReceta == cursor.FechaDeLaReceta &&
+                        r.Receta.ID < cursor.ID)))));
+        }
+    }
+
+    var ordenada = anterior
+        ? consulta.OrderBy(r => r.Promedio)
+            .ThenBy(r => r.Cantidad)
+            .ThenBy(r => r.Receta.FechaDeLaReceta)
+            .ThenBy(r => r.Receta.ID)
+        : consulta.OrderByDescending(r => r.Promedio)
+            .ThenByDescending(r => r.Cantidad)
+            .ThenByDescending(r => r.Receta.FechaDeLaReceta)
+            .ThenByDescending(r => r.Receta.ID);
+
+    return await ordenada
+        .Take(tamano + 1)
+        .Select(r => r.Receta)
+        .ToListAsync();
 }
 
-    public async Task<List<Receta>> MasRecientes(DateTime? ultimoVisto)
+public async Task<List<Receta>> MasRecientes(
+    int? lastId, int tamano = 16, bool anterior = false)
+{
+    var consulta = _db.Recetas.AsNoTracking();
+
+    if (lastId.HasValue)
     {
-        if (ultimoVisto.HasValue)
-        {
-            ultimoVisto = ultimoVisto.Value.Kind switch
-            {
-                DateTimeKind.Local =>
-                    ultimoVisto.Value.ToUniversalTime(),
+        var cursor = await _db.Recetas
+            .Where(r => r.ID == lastId.Value)
+            .Select(r => new { r.FechaDeLaReceta, r.ID })
+            .FirstOrDefaultAsync();
 
-                DateTimeKind.Unspecified =>
-                    DateTime.SpecifyKind(
-                        ultimoVisto.Value,
-                        DateTimeKind.Utc),
-
-                _ => ultimoVisto.Value
-            };
-        }
-
-        var consulta = _db.Recetas.AsNoTracking();
-
-        if (ultimoVisto.HasValue)
-        {
-            consulta = consulta.Where(receta =>
-                receta.FechaDeLaReceta > ultimoVisto.Value);
-        }
-
-        return await consulta
-            .OrderByDescending(receta => receta.FechaDeLaReceta)
-            .Take(16)
-            .ToListAsync();
+        if (cursor != null)
+            consulta = consulta.Where(r => anterior
+                ? r.FechaDeLaReceta > cursor.FechaDeLaReceta ||
+                    (r.FechaDeLaReceta == cursor.FechaDeLaReceta &&
+                        r.ID > cursor.ID)
+                : r.FechaDeLaReceta < cursor.FechaDeLaReceta ||
+                    (r.FechaDeLaReceta == cursor.FechaDeLaReceta &&
+                        r.ID < cursor.ID));
     }
+
+    return await (anterior
+        ? consulta.OrderBy(r => r.FechaDeLaReceta).ThenBy(r => r.ID)
+        : consulta.OrderByDescending(r => r.FechaDeLaReceta)
+            .ThenByDescending(r => r.ID))
+        .Take(tamano + 1)
+        .ToListAsync();
+}
 
     internal async Task<Receta?> ObtenerDetalle(int id)
     {

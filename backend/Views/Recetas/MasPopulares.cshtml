@@ -2,8 +2,7 @@
 
 @{
     ViewData["Title"] = "Recetas Populares";
-    int paginaActual = (int)(ViewBag.PaginaActual ?? 1);
-    int totalPaginas = (int)(ViewBag.TotalPaginas ?? 1);
+    int paginaActual = ViewBag.PaginaActual ?? 1;
 }
 
 <div class="container py-5">
@@ -46,21 +45,36 @@
 
     </div>
 
-    @if (totalPaginas > 1)
+    @if (ViewBag.HayAnterior == true || ViewBag.HayMas == true)
     {
-        <nav class="mt-5">
-            <ul class="pagination justify-content-center">
-                <li class="page-item @(paginaActual <= 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="MasPopulares" asp-route-pagina="@(paginaActual - 1)">Anterior</a>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">@paginaActual de @totalPaginas</span>
-                </li>
-                <li class="page-item @(paginaActual >= totalPaginas ? "disabled" : "")">
-                    <a class="page-link" asp-action="MasPopulares" asp-route-pagina="@(paginaActual + 1)">Siguiente</a>
-                </li>
-            </ul>
-        </nav>
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+            @if (ViewBag.HayAnterior == true)
+            {
+                <a class="btn btn-outline-secondary"
+                   asp-action="MasPopulares"
+                   asp-route-lastId="@ViewBag.PrimerId"
+                   asp-route-pagina="@(paginaActual - 1)"
+                   asp-route-anterior="true">Anterior</a>
+            }
+            else
+            {
+                <span class="btn btn-outline-secondary disabled">Anterior</span>
+            }
+
+            <span>Página @paginaActual</span>
+
+            @if (ViewBag.HayMas == true)
+            {
+                <a class="btn btn-outline-secondary"
+                   asp-action="MasPopulares"
+                   asp-route-lastId="@ViewBag.UltimoId"
+                   asp-route-pagina="@(paginaActual + 1)">Siguiente</a>
+            }
+            else
+            {
+                <span class="btn btn-outline-secondary disabled">Siguiente</span>
+            }
+        </div>
     }
 
 </div>

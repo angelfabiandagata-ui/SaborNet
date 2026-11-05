@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Recetas Recientes";
+    int paginaActual = ViewBag.PaginaActual ?? 1;
 }
 
 <style>
@@ -116,4 +117,36 @@
         </div>
     }
 
-</div>  
+    @if (ViewBag.HayAnterior == true || ViewBag.HayMas == true)
+    {
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+            @if (ViewBag.HayAnterior == true)
+            {
+                <a asp-action="MasRecientes"
+                   asp-route-lastId="@ViewBag.PrimerId"
+                   asp-route-pagina="@(paginaActual - 1)"
+                   asp-route-anterior="true"
+                   class="btn btn-outline-secondary">Anterior</a>
+            }
+            else
+            {
+                <span class="btn btn-outline-secondary disabled">Anterior</span>
+            }
+
+            <span>Página @paginaActual</span>
+
+            @if (ViewBag.HayMas == true)
+            {
+                <a asp-action="MasRecientes"
+                   asp-route-lastId="@ViewBag.UltimoId"
+                   asp-route-pagina="@(paginaActual + 1)"
+                   class="btn btn-outline-secondary">Siguiente</a>
+            }
+            else
+            {
+                <span class="btn btn-outline-secondary disabled">Siguiente</span>
+            }
+        </div>
+    }
+
+</div>   

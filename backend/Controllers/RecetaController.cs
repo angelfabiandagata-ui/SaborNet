@@ -29,18 +29,25 @@ public class RecetasController : Controller
 
 // GET: /Recetas
 [HttpGet]
-public async Task<IActionResult> Index(string? termino, int pagina = 1)
+public async Task<IActionResult> Index(
+    string? termino, int? lastId, int pagina = 1, bool anterior = false)
 {
     const int tamano = 10;
-    pagina = Math.Max(1, pagina);
 
-    var (recetas, total) =
-        await _servicio.ListarPaginado(pagina, tamano, termino);
+    var recetas =
+        await _servicio.ListarPaginado(lastId, tamano, termino, anterior);
 
     ViewBag.Termino = termino;
     ViewBag.PaginaActual = pagina;
-    ViewBag.TotalPaginas =
-        (int)Math.Ceiling((double)total / tamano);
+    bool hayMas = recetas.Count > tamano;
+    if (hayMas)
+        recetas.RemoveAt(tamano);
+    if (anterior)
+        recetas.Reverse();
+    ViewBag.HayAnterior = anterior ? hayMas : pagina > 1;
+    ViewBag.HayMas = anterior || hayMas;
+    ViewBag.PrimerId = recetas.FirstOrDefault()?.ID;
+    ViewBag.UltimoId = recetas.LastOrDefault()?.ID;
     ViewBag.Promedios = await _valoracionServicio.ObtenerPromedios(
         recetas.Select(r => r.ID));
 
@@ -49,26 +56,47 @@ public async Task<IActionResult> Index(string? termino, int pagina = 1)
 
 // GET: /Recetas/MasPopulares
 [HttpGet]
-public async Task<IActionResult> MasPopulares(int pagina = 1)
+public async Task<IActionResult> MasPopulares(
+    int? lastId, int pagina = 1, bool anterior = false)
 {
     const int tamano = 10;
-    pagina = Math.Max(1, pagina);
 
-    var (recetas, total) =
-        await _servicio.ListarPopularesPaginado(pagina, tamano);
+    var recetas =
+        await _servicio.ListarPopularesPaginado(lastId, tamano, anterior);
 
     ViewBag.PaginaActual = pagina;
-    ViewBag.TotalPaginas =
-        (int)Math.Ceiling((double)total / tamano);
+    bool hayMas = recetas.Count > tamano;
+    if (hayMas)
+        recetas.RemoveAt(tamano);
+    if (anterior)
+        recetas.Reverse();
+    ViewBag.HayAnterior = anterior ? hayMas : pagina > 1;
+    ViewBag.HayMas = anterior || hayMas;
+    ViewBag.PrimerId = recetas.FirstOrDefault()?.ID;
+    ViewBag.UltimoId = recetas.LastOrDefault()?.ID;
 
     return View(recetas);
 }
 
-    // GET: /Recetas/MasRecientes?ultimoVisto=2026-01-01T00:00:00
+    // GET: /Recetas/MasRecientes?lastId=5
     [HttpGet]
-    public async Task<IActionResult> MasRecientes(DateTime? ultimoVisto)
+    public async Task<IActionResult> MasRecientes(
+        int? lastId, int pagina = 1, bool anterior = false)
     {
-        var recetas = await _servicio.MasRecientes(ultimoVisto);
+        const int tamano = 16;
+        var recetas = await _servicio.MasRecientes(lastId, tamano, anterior);
+
+        ViewBag.PaginaActual = pagina;
+        bool hayMas = recetas.Count > tamano;
+        if (hayMas)
+            recetas.RemoveAt(tamano);
+        if (anterior)
+            recetas.Reverse();
+        ViewBag.HayAnterior = anterior ? hayMas : pagina > 1;
+        ViewBag.HayMas = anterior || hayMas;
+        ViewBag.PrimerId = recetas.FirstOrDefault()?.ID;
+        ViewBag.UltimoId = recetas.LastOrDefault()?.ID;
+
         return View(recetas);
     }
 
@@ -488,7 +516,9 @@ public async Task<IActionResult> Crear()
 [HttpGet]
 public async Task<IActionResult> MisRecetas(
     string? termino,
-    int pagina = 1)
+    int? lastId,
+    int pagina = 1,
+    bool anterior = false)
 {
     var usuarioId = ObtenerUsuarioId();
 
@@ -496,19 +526,26 @@ public async Task<IActionResult> MisRecetas(
         return Challenge();
 
     const int tamano = 10;
-    pagina = Math.Max(1, pagina);
 
-    var (recetas, total) =
+    var recetas =
         await _servicio.ListarMisRecetasPaginado(
             usuarioId.Value,
-            pagina,
+            lastId,
             tamano,
-            termino);
+            termino,
+            anterior);
 
     ViewBag.Termino = termino;
     ViewBag.PaginaActual = pagina;
-    ViewBag.TotalPaginas =
-        (int)Math.Ceiling((double)total / tamano);
+    bool hayMas = recetas.Count > tamano;
+    if (hayMas)
+        recetas.RemoveAt(tamano);
+    if (anterior)
+        recetas.Reverse();
+    ViewBag.HayAnterior = anterior ? hayMas : pagina > 1;
+    ViewBag.HayMas = anterior || hayMas;
+    ViewBag.PrimerId = recetas.FirstOrDefault()?.ID;
+    ViewBag.UltimoId = recetas.LastOrDefault()?.ID;
 
     ViewBag.Promedios =
         await _valoracionServicio.ObtenerPromedios(
